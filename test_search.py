@@ -409,7 +409,7 @@ def test_process_search_idv(mocker, api_client):
 
     assert len(result) > 0
     # Should have both parent and child details
-    assert any("FAST BPA" in item.get("text", "") for item in result)
+    assert any("Test Contract" in item.get("text", "") for item in result)
 
 
 def test_process_search_no_results(mocker, api_client):
