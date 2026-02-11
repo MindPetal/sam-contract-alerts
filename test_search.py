@@ -69,7 +69,7 @@ def test_search_by_referenced_idv_piid(mocker, api_client):
         api_client,
         "test-api-key",
         "02/24/2024",
-        {"referenced_idv_piid": "70T03024A7667N006"},
+        {"parent_contract_no": "123456789"},
     )
 
     assert result == api_response.to_dict().get("award_summary", [])
@@ -364,7 +364,7 @@ def test_process_search_idv(mocker, api_client):
     # Mock API responses for both parent IDV and child awards
     parent_summary = {
         "contract_id": {
-            "piid": "70T03024A7667N006",
+            "piid": "123456789",
             "modification_number": "P00002",
             "reason_for_modification": {"name": "Exercise An Option"},
         },
@@ -383,7 +383,7 @@ def test_process_search_idv(mocker, api_client):
 
     child_summary = {
         "contract_id": {
-            "piid": "70T03026F7667N011",
+            "piid": "987654321",
             "modification_number": "0",
             "reason_for_modification": {},
         },
@@ -404,7 +404,7 @@ def test_process_search_idv(mocker, api_client):
     mocker.patch("search.search", side_effect=[[parent_summary], [child_summary]])
 
     result = search.process_search(
-        api_client, "test-api-key", "70T03024A7667N006:FAST BPA:IDV", ""
+        api_client, "test-api-key", "123456789:Test Contract:IDV", ""
     )
 
     assert len(result) > 0
@@ -416,7 +416,7 @@ def test_process_search_no_results(mocker, api_client):
     mocker.patch("search.search", return_value=[])
 
     result = search.process_search(
-        api_client, "test-api-key", "123456789:Test Contract", ""
+        api_client, "test-api-key", "123456789:Test Contract:AWARD", ""
     )
 
     assert result == []
