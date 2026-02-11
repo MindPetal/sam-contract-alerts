@@ -1,4 +1,4 @@
-# SAM.gov Contract Awards search and post to MS Teams
+# SAM.gov contract awards search and post to MS Teams
 [![sam-contract-alerts-build](https://github.com/MindPetal/sam-contract-alerts/actions/workflows/sam-contract-alerts-build.yaml/badge.svg)](https://github.com/MindPetal/sam-contract-alerts/actions/workflows/sam-contract-alerts-build.yaml) [![sam-contract-alerts-run](https://github.com/MindPetal/sam-contract-alerts/actions/workflows/sam-contract-alerts-run.yaml/badge.svg)](https://github.com/MindPetal/sam-contract-alerts/actions/workflows/sam-contract-alerts-run.yaml)
 
 Python client to search government contract awards from SAM.gov API for the prior day: https://open.gsa.gov/api/contract-awards/
