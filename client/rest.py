@@ -214,7 +214,6 @@ class RESTClientObject(object):
                     raise ApiException(status=0, reason=msg)
             # For `GET`, `HEAD`
             else:
-                logger.info(f"{method} {url}")
                 r = self.pool_manager.request(
                     method,
                     url,

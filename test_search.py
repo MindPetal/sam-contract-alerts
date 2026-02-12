@@ -23,7 +23,9 @@ def test_search_by_contract_no(mocker, api_client):
     api_response = client.AwardResponse()
     award_summary = client.AwardSummary()
     award_summary.contract_id = client.ContractId()
-    award_summary.award_details = client.AwardDetails()
+    award_summary.award_details = client.AwardDetails(
+        total_contract_dollars=client.TotalContractDollars()
+    )
     api_response.award_summary = [award_summary]
 
     mocker.patch("search.client.SamApi.search", return_value=api_response)
@@ -40,7 +42,9 @@ def test_search_by_naics(mocker, api_client):
     api_response = client.AwardResponse()
     award_summary = client.AwardSummary()
     award_summary.contract_id = client.ContractId()
-    award_summary.award_details = client.AwardDetails()
+    award_summary.award_details = client.AwardDetails(
+        total_contract_dollars=client.TotalContractDollars()
+    )
     api_response.award_summary = [award_summary]
 
     mocker.patch("search.client.SamApi.search", return_value=api_response)
@@ -60,7 +64,9 @@ def test_search_by_referenced_idv_piid(mocker, api_client):
     api_response = client.AwardResponse()
     award_summary = client.AwardSummary()
     award_summary.contract_id = client.ContractId()
-    award_summary.award_details = client.AwardDetails()
+    award_summary.award_details = client.AwardDetails(
+        total_contract_dollars=client.TotalContractDollars()
+    )
     api_response.award_summary = [award_summary]
 
     mocker.patch("search.client.SamApi.search", return_value=api_response)
@@ -108,7 +114,7 @@ def test_extract_contract_details():
 
     result = search.extract_contract_details(award_summary)
 
-    assert result["date"] == "2024-02-25"
+    assert result["date"] == "February 25, 2024"
     assert result["company"] == "Test Company"
     assert result["obligation"] == "$50,000"
     assert result["total_value"] == "$170,000,000"
@@ -123,6 +129,7 @@ def test_extract_contract_details_fallback_to_awardee_name():
         "award_details": {
             "dates": {},
             "dollars": {},
+            "total_contract_dollars": {},
             "awardee_data": {
                 "awardee_header": {"awardee_name": "Test Company"},
                 "awardee_location": {},
@@ -142,6 +149,7 @@ def test_extract_contract_details_empty_obligation():
         "award_details": {
             "dates": {},
             "dollars": {"action_obligation": ""},
+            "total_contract_dollars": {},
             "awardee_data": {
                 "awardee_header": {},
                 "awardee_location": {},
@@ -163,7 +171,7 @@ def test_format_results_with_contract_no():
             "contract_nm": "Test Contract",
             "contract_details": [
                 {
-                    "date": "2024-02-25",
+                    "date": "February 25, 2024",
                     "company": "Test Company",
                     "reason": "Exercise An Option",
                     "obligation": "$50,000",
@@ -202,7 +210,7 @@ def test_format_results_with_naics():
             "agency": "Test Agency",
             "contract_details": [
                 {
-                    "date": "2024-02-25",
+                    "date": "February 25, 2024",
                     "company": "Test Company",
                     "reason": "Exercise An Option",
                     "obligation": "$50,000",
@@ -245,6 +253,7 @@ def test_search_contracts(mocker, api_client):
         "award_details": {
             "dates": {"date_signed": "2024-02-25T00:00:00Z"},
             "dollars": {"action_obligation": "50000"},
+            "total_contract_dollars": {"total_base_and_all_options_value": "100000"},
             "awardee_data": {
                 "awardee_header": {"awardee_name": "Test Company"},
                 "awardee_location": {},
@@ -276,6 +285,7 @@ def test_search_naics(mocker, api_client):
         "award_details": {
             "dates": {"date_signed": "2024-02-25T00:00:00Z"},
             "dollars": {"action_obligation": "100000"},
+            "total_contract_dollars": {"total_base_and_all_options_value": "200000"},
             "awardee_data": {
                 "awardee_header": {"awardee_name": "Another Company"},
                 "awardee_location": {},

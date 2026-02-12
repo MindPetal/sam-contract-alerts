@@ -241,6 +241,88 @@ class Dollars(object):
         return not self == other
 
 
+class TotalContractDollars(object):
+    """Total contract dollar amounts"""
+
+    types = {
+        "total_action_obligation": "str",
+        "total_base_and_exercised_options_value": "str",
+        "total_base_and_all_options_value": "str"
+    }
+    attribute_map = {
+        "total_action_obligation": "totalActionObligation",
+        "total_base_and_exercised_options_value": "totalBaseAndExercisedOptionsValue",
+        "total_base_and_all_options_value": "totalBaseAndAllOptionsValue"
+    }
+
+    def __init__(self, total_action_obligation=None, total_base_and_exercised_options_value=None, total_base_and_all_options_value=None):
+        self._total_action_obligation = None
+        self._total_base_and_exercised_options_value = None
+        self._total_base_and_all_options_value = None
+        self.discriminator = None
+        if total_action_obligation is not None:
+            self.total_action_obligation = total_action_obligation
+        if total_base_and_exercised_options_value is not None:
+            self.total_base_and_exercised_options_value = total_base_and_exercised_options_value
+        if total_base_and_all_options_value is not None:
+            self.total_base_and_all_options_value = total_base_and_all_options_value
+
+    @property
+    def total_action_obligation(self):
+        return self._total_action_obligation
+
+    @total_action_obligation.setter
+    def total_action_obligation(self, total_action_obligation):
+        self._total_action_obligation = total_action_obligation
+
+    @property
+    def total_base_and_exercised_options_value(self):
+        return self._total_base_and_exercised_options_value
+
+    @total_base_and_exercised_options_value.setter
+    def total_base_and_exercised_options_value(self, total_base_and_exercised_options_value):
+        self._total_base_and_exercised_options_value = total_base_and_exercised_options_value
+
+    @property
+    def total_base_and_all_options_value(self):
+        return self._total_base_and_all_options_value
+
+    @total_base_and_all_options_value.setter
+    def total_base_and_all_options_value(self, total_base_and_all_options_value):
+        self._total_base_and_all_options_value = total_base_and_all_options_value
+
+    def to_dict(self):
+        result = {}
+        for attr, _ in six.iteritems(self.types):
+            value = getattr(self, attr)
+            if isinstance(value, list):
+                result[attr] = list(map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value))
+            elif hasattr(value, "to_dict"):
+                result[attr] = value.to_dict()
+            elif isinstance(value, dict):
+                result[attr] = dict(map(lambda item: (item[0], item[1].to_dict()) if hasattr(item[1], "to_dict") else item, value.items()))
+            else:
+                result[attr] = value
+        if issubclass(TotalContractDollars, dict):
+            for key, value in self.items():
+                result[key] = value
+        return result
+
+    def to_str(self):
+        return pprint.pformat(self.to_dict())
+
+    def __repr__(self):
+        return self.to_str()
+
+    def __eq__(self, other):
+        if not isinstance(other, TotalContractDollars):
+            return False
+        return self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not self == other
+
+
 class AwardeeHeader(object):
     """Awardee header information"""
 
@@ -475,19 +557,22 @@ class AwardDetails(object):
     types = {
         "dates": "Dates",
         "dollars": "Dollars",
+        "total_contract_dollars": "TotalContractDollars",
         "awardee_data": "AwardeeData",
         "product_or_service_information": "ProductOrServiceInformation",
     }
     attribute_map = {
         "dates": "dates",
         "dollars": "dollars",
+        "total_contract_dollars": "totalContractDollars",
         "awardee_data": "awardeeData",
         "product_or_service_information": "productOrServiceInformation",
     }
 
-    def __init__(self, dates=None, dollars=None, awardee_data=None, product_or_service_information=None):
+    def __init__(self, dates=None, dollars=None, total_contract_dollars=None, awardee_data=None, product_or_service_information=None):
         self._dates = None
         self._dollars = None
+        self._total_contract_dollars = None
         self._awardee_data = None
         self._product_or_service_information = None
         self.discriminator = None
@@ -495,6 +580,8 @@ class AwardDetails(object):
             self.dates = dates
         if dollars is not None:
             self.dollars = dollars
+        if total_contract_dollars is not None:
+            self.total_contract_dollars = total_contract_dollars
         if awardee_data is not None:
             self.awardee_data = awardee_data
         if product_or_service_information is not None:
@@ -515,6 +602,14 @@ class AwardDetails(object):
     @dollars.setter
     def dollars(self, dollars):
         self._dollars = dollars
+
+    @property
+    def total_contract_dollars(self):
+        return self._total_contract_dollars
+
+    @total_contract_dollars.setter
+    def total_contract_dollars(self, total_contract_dollars):
+        self._total_contract_dollars = total_contract_dollars
 
     @property
     def awardee_data(self):

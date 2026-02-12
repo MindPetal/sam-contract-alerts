@@ -5,6 +5,7 @@ API and post results to MS Teams.
 
 import logging
 import sys
+import time
 from datetime import date, datetime, timedelta
 
 import client
@@ -24,14 +25,14 @@ def search(
     Execute sam.gov contract awards search
     """
     api_instance = client.SamApi(api_client)
-
+    
     try:
         if "contract_no" in criteria:
             api_response = api_instance.search(
                 api_key=api_key,
                 piid=criteria["contract_no"],
                 date_signed=yday,
-                limit=100,
+                limit=10,
                 offset=0,
             )
         elif "parent_contract_no" in criteria:
@@ -40,7 +41,7 @@ def search(
                 api_key=api_key,
                 referenced_idv_piid=criteria["parent_contract_no"],
                 date_signed=yday,
-                limit=100,
+                limit=10,
                 offset=0,
             )
         elif "naics" in criteria:
@@ -49,14 +50,20 @@ def search(
                 naics_code=criteria["naics"],
                 contracting_subtier_name=criteria["agency"],
                 date_signed=yday,
-                limit=100,
+                limit=20,
                 offset=0,
             )
     except ApiException as e:
         log.exception("Exception when calling SamApi->search: %s\n" % e)
         raise
 
-    return api_response.to_dict().get("award_summary", [])
+    time.sleep(4)
+
+    if api_response is None:
+        return []
+    
+    response_dict = api_response.to_dict()
+    return response_dict.get("award_summary") or []
 
 
 def build_textblock(content: str) -> dict:
@@ -75,7 +82,9 @@ def extract_contract_details(award_summary: dict) -> dict:
     award_details = award_summary.get("award_details", {})
 
     dates = award_details.get("dates", {})
-    contract_info["date"] = dates.get("date_signed", "").split("T")[0]
+    date_signed = dates.get("date_signed", "").split("T")[0]
+    parsed_date = datetime.strptime(date_signed, "%Y-%m-%d")
+    contract_info["date"] = parsed_date.strftime("%B %d, %Y")
 
     awardee_data = award_details.get("awardee_data", {}).get("awardee_header", {})
     contract_info["company"] = awardee_data.get("awardee_name", "")
@@ -92,7 +101,8 @@ def extract_contract_details(award_summary: dict) -> dict:
 
     product_service = award_details.get("product_or_service_information", {})
     desc = product_service.get("description_of_contract_requirement", "")
-    contract_info["desc"] = desc.replace("\n", " ")
+    desc = desc.replace("|!#^", " ").replace("\n", " ")
+    contract_info["desc"] = " ".join(desc.split())
 
     contract_info["piid"] = award_summary.get("contract_id", {}).get("piid", "")
 

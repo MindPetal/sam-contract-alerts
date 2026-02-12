@@ -13,6 +13,7 @@ from client.models.sam_contracts_dto import (
     Dollars,
     ProductOrServiceInformation,
     ReasonForModification,
+    TotalContractDollars,
 )
 
 # Import MS Teams models

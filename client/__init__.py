@@ -24,5 +24,6 @@ from client.models.sam_contracts_dto import (
     Dollars as Dollars,
     ProductOrServiceInformation as ProductOrServiceInformation,
     ReasonForModification as ReasonForModification,
+    TotalContractDollars as TotalContractDollars,
 )
 from client.rest import ApiException as ApiException
