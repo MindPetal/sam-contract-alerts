@@ -100,9 +100,7 @@ def extract_contract_details(award_summary: dict) -> dict:
     contract_info["total_value"] = f"${float(total_value):,.12g}" if total_value else ""
 
     product_service = award_details.get("product_or_service_information", {})
-    desc = product_service.get("description_of_contract_requirement", "")
-    desc = desc.replace("|!#^", " ").replace("\n", " ")
-    contract_info["desc"] = " ".join(desc.split())
+    contract_info["desc"] = product_service.get("description_of_contract_requirement", "")
 
     contract_info["piid"] = award_summary.get("contract_id", {}).get("piid", "")
 
@@ -133,15 +131,17 @@ def format_results(raw_results: list[dict]) -> list:
                 )
 
             for detail in result["contract_details"]:
-                desc = detail["desc"].replace("\n", " ")
-                contract_url = build_search_url({"contract_no": detail["piid"]}, "")
+                desc = detail["desc"].replace("|!#^", " ").replace("\n", " ")
+                desc = " ".join(desc.split())
+                contract_url = build_search_url(detail["piid"])
                 content += (
-                    f'\n\n- **Date Signed:** {detail["date"]} | **Company:** '
+                    f'\n\n- **Contract:** [{detail["piid"]}]({contract_url}) | '
+                    f'**Date Signed:** {detail["date"]} | **Company:** '
                     f'{detail["company"]} | '
                     f'**Reason:** {detail["reason"]} | '
                     f'**Obligation:** {detail["obligation"]} | '
                     f'**Total Value:** {detail["total_value"]} | '
-                    f"**Description:** {desc} | [View on SAM]({contract_url})"
+                    f"**Description:** {desc}"
                 )
 
             items += [build_textblock(content), build_textblock("")]
@@ -149,18 +149,14 @@ def format_results(raw_results: list[dict]) -> list:
     return items
 
 
-def build_search_url(criteria: dict, yday: str) -> str:
+def build_search_url(piid: str) -> str:
     """
-    Build SAM.gov search URL for viewing contract results
+    Build SAM.gov search URL for viewing contracts
     """
 
     return (
-        f"https://sam.gov/search/?page=1&pageSize=25&sort=-modifiedDate&index=awd"
-        f"&sfm%5BsimpleSearch%5D%5BkeywordRadio%5D=ALL"
-        f"&sfm%5BsimpleSearch%5D%5BkeywordTags%5D%5B0%5D%5Bkey%5D={criteria['contract_no']}"
-        f"&sfm%5BsimpleSearch%5D%5BkeywordTags%5D%5B0%5D%5Bvalue%5D={criteria['contract_no']}"
-        f"&sfm%5Bstatus%5D%5Bis_active%5D=true"
-        f"&sfm%5Bdates%5D%5BdateSigned%5D%5BdateSignedSelect%5D=past24"
+        f"https://sam.gov/search/?sfm%5BsimpleSearch%5D%5BkeywordTags%5D%5B0%5D%5Bkey%5D={piid}"
+        f"&sfm%5BsimpleSearch%5D%5BkeywordTags%5D%5B0%5D%5Bvalue%5D={piid}"
     )
 
 

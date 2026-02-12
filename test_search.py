@@ -119,7 +119,7 @@ def test_extract_contract_details():
     assert result["obligation"] == "$50,000"
     assert result["total_value"] == "$170,000,000"
     assert result["reason"] == "Exercise An Option"
-    assert result["desc"] == "Test description with newline"
+    assert result["desc"] == "Test description\nwith newline"
     assert result["piid"] == "123456789"
 
 
@@ -190,11 +190,10 @@ def test_format_results_with_contract_no():
         result[0]["text"]
         == f'**{date.today().strftime("%A, %m/%d/%Y")}.** Contract updates.'
     )
-    # Header should not have View on SAM link anymore
     assert "Test Contract" in result[2]["text"]
     assert "123456789" in result[2]["text"]
-    # View on SAM should be in the details line
-    assert "View on SAM" in result[2]["text"]
+    assert "**Contract:** [123456789]" in result[2]["text"]
+    assert "sam.gov" in result[2]["text"]
     assert "Test Company" in result[2]["text"]
     assert "Exercise An Option" in result[2]["text"]
     assert "$50,000" in result[2]["text"]
@@ -227,8 +226,7 @@ def test_format_results_with_naics():
     assert len(result) == 4
     assert "Test Agency" in result[2]["text"]
     assert "541512" in result[2]["text"]
-    # View on SAM should be in the details line for NAICS results too
-    assert "View on SAM" in result[2]["text"]
+    assert "**Contract:** [987654321]" in result[2]["text"]
 
 
 def test_format_results_empty():
@@ -238,7 +236,7 @@ def test_format_results_empty():
 
 
 def test_build_search_url_contract_no():
-    result = search.build_search_url({"contract_no": "123456789"}, "")
+    result = search.build_search_url("123456789")
 
     assert "123456789" in result
     assert "sam.gov" in result

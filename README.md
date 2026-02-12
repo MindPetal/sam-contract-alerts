@@ -14,21 +14,17 @@ The [sam-contract-alerts-run](https://github.com/MindPetal/sam-contract-alerts/a
 
 ## Local execution:
 
-- Python 3.13+ required.
-- Install:
-
-```sh
+Python 3.13+ required. Install:
+```bash
 pip3 install . --use-pep517
 ```
 
-- Tests:
-
-```sh
+Tests:
+```bash
 pytest test_search.py
 ```
 
-- Execute: pass SAM API key, contract list, naics list, ms teams webhook url:
-
-```sh
-python3 search.py my-sam-api-key my-contract-list my-naics-list my-ms-webhook-url
+Execute: pass args:
+```bash
+python3 search.py 'my-sam-api-key' 'my-contract-list' 'my-naics-list' 'my-ms-webhook-url'
 ```
