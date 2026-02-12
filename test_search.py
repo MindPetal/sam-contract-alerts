@@ -127,7 +127,7 @@ def test_extract_contract_details_fallback_to_awardee_name():
     award_summary = {
         "contract_id": {"reason_for_modification": {}},
         "award_details": {
-            "dates": {},
+            "dates": {"date_signed": "2024-02-25T00:00:00Z"},
             "dollars": {},
             "total_contract_dollars": {},
             "awardee_data": {
@@ -147,7 +147,7 @@ def test_extract_contract_details_empty_obligation():
     award_summary = {
         "contract_id": {"reason_for_modification": {}},
         "award_details": {
-            "dates": {},
+            "dates": {"date_signed": "2024-02-25T00:00:00Z"},
             "dollars": {"action_obligation": ""},
             "total_contract_dollars": {},
             "awardee_data": {
