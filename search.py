@@ -89,7 +89,7 @@ def extract_contract_details(award_summary: dict) -> dict:
     awardee_data = award_details.get("awardee_data", {}).get("awardee_header", {})
     contract_info["company"] = awardee_data.get("awardee_name", "")
 
-    reason = award_summary.get("contract_id", {}).get("reason_for_modification", {})
+    reason = award_summary.get("contract_id", {}).get("reason_for_modification") or {}
     contract_info["reason"] = reason.get("name", "")
 
     obligation = award_details.get("dollars", {}).get("action_obligation", "")
