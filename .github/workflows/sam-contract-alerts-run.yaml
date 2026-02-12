@@ -2,14 +2,14 @@ name: sam-contract-alerts-run
 
 on:
   workflow_dispatch:
-  #schedule:
-    #- cron: '0 13 * * *'
+  schedule:
+    - cron: '0 13 * * *'
 
 permissions:
   contents: read
 
 jobs:
-  sam-search-run:
+  sam-contract-alerts-run:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v6
