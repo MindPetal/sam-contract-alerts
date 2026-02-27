@@ -25,7 +25,7 @@ def search(
     Execute sam.gov contract awards search
     """
     api_instance = client.SamApi(api_client)
-    
+
     try:
         if "contract_no" in criteria:
             api_response = api_instance.search(
@@ -61,7 +61,7 @@ def search(
 
     if api_response is None:
         return []
-    
+
     response_dict = api_response.to_dict()
     return response_dict.get("award_summary") or []
 
@@ -100,7 +100,9 @@ def extract_contract_details(award_summary: dict) -> dict:
     contract_info["total_value"] = f"${float(total_value):,.12g}" if total_value else ""
 
     product_service = award_details.get("product_or_service_information", {})
-    contract_info["desc"] = product_service.get("description_of_contract_requirement", "")
+    contract_info["desc"] = product_service.get(
+        "description_of_contract_requirement", ""
+    )
 
     contract_info["piid"] = award_summary.get("contract_id", {}).get("piid", "")
 
@@ -278,6 +280,26 @@ def process_search(
     raw_results = contract_results + naics_results
 
     if raw_results:
+        # Dedupe contract details by piid
+        seen_piids: set[str] = set()
+        dedupe_results = []
+
+        for result in raw_results:
+            unique_details = []
+
+            for detail in result["contract_details"]:
+                piid = detail["piid"]
+
+                if piid not in seen_piids:
+                    seen_piids.add(piid)
+                    unique_details.append(detail)
+
+            if unique_details:
+                result["contract_details"] = unique_details
+                dedupe_results.append(result)
+
+        raw_results = dedupe_results
+
         # Inject index into results
         n = 1
 

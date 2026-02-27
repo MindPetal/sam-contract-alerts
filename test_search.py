@@ -420,6 +420,64 @@ def test_process_search_idv(mocker, api_client):
     assert any("Test Contract" in item.get("text", "") for item in result)
 
 
+def test_process_search_dedupes_piids(mocker, api_client):
+    # Same PIID appearing in a contract search and a NAICS search
+    shared_summary = {
+        "contract_id": {
+            "piid": "DUPLICATE123",
+            "reason_for_modification": {"name": "Exercise An Option"},
+        },
+        "award_details": {
+            "dates": {"date_signed": "2024-02-25T00:00:00Z"},
+            "dollars": {"action_obligation": "50000"},
+            "total_contract_dollars": {"total_base_and_all_options_value": "100000"},
+            "awardee_data": {
+                "awardee_header": {"awardee_name": "Test Company"},
+                "awardee_location": {},
+            },
+            "product_or_service_information": {
+                "description_of_contract_requirement": "Test desc"
+            },
+        },
+    }
+
+    unique_summary = {
+        "contract_id": {
+            "piid": "UNIQUE456",
+            "reason_for_modification": {"name": "New Work"},
+        },
+        "award_details": {
+            "dates": {"date_signed": "2024-02-25T00:00:00Z"},
+            "dollars": {"action_obligation": "75000"},
+            "total_contract_dollars": {"total_base_and_all_options_value": "200000"},
+            "awardee_data": {
+                "awardee_header": {"awardee_name": "Another Company"},
+                "awardee_location": {},
+            },
+            "product_or_service_information": {
+                "description_of_contract_requirement": "Unique desc"
+            },
+        },
+    }
+
+    mocker.patch(
+        "search.search",
+        side_effect=[[shared_summary], [shared_summary, unique_summary]],
+    )
+
+    result = search.process_search(
+        api_client,
+        "test-api-key",
+        "DUPLICATE123:Test Contract:AWARD",
+        "541512:Test Agency:TA",
+    )
+
+    full_text = " ".join(item.get("text", "") for item in result)
+
+    assert full_text.count("DUPLICATE123") == 1
+    assert "UNIQUE456" in full_text
+
+
 def test_process_search_no_results(mocker, api_client):
     mocker.patch("search.search", return_value=[])
 
