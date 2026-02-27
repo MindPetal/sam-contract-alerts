@@ -472,10 +472,16 @@ def test_process_search_dedupes_piids(mocker, api_client):
         "541512:Test Agency:TA",
     )
 
-    full_text = " ".join(item.get("text", "") for item in result)
+    text_blocks = [item.get("text", "") for item in result if item.get("text")]
 
-    assert full_text.count("DUPLICATE123") == 1
-    assert "UNIQUE456" in full_text
+    naics_blocks = [b for b in text_blocks if "TA" in b and "NAICS" in b]
+    assert len(naics_blocks) == 1
+    assert "UNIQUE456" in naics_blocks[0]
+    assert "DUPLICATE123" not in naics_blocks[0]
+
+    contract_blocks = [b for b in text_blocks if "Test Contract" in b]
+    assert len(contract_blocks) == 1
+    assert "DUPLICATE123" in contract_blocks[0]
 
 
 def test_process_search_no_results(mocker, api_client):
