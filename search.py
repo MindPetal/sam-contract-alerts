@@ -272,7 +272,7 @@ def process_search(
     api_client: client.ApiClient, sam_api_key: str, contract_list: str, naics_list: str
 ) -> list:
     """Prepare sam.gov search and format results."""
-    yday = (datetime.now() - timedelta(days=4)).strftime("%m/%d/%Y")
+    yday = (datetime.now() - timedelta(days=1)).strftime("%m/%d/%Y")
 
     contract_results = search_contracts(api_client, sam_api_key, contract_list, yday)
     naics_results = search_naics(api_client, sam_api_key, naics_list, yday)
