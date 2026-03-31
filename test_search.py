@@ -96,7 +96,11 @@ def test_extract_contract_details():
             "reason_for_modification": {"name": "Exercise An Option"},
         },
         "award_details": {
-            "dates": {"date_signed": "2024-02-25T00:00:00Z"},
+            "dates": {
+                "date_signed": "2024-02-25T00:00:00Z",
+                "current_completion_date": "2025-06-30 00:00:00.000",
+                "ultimate_completion_date": "2026-06-30 00:00:00.000",
+            },
             "dollars": {"action_obligation": "50000"},
             "total_contract_dollars": {"total_base_and_all_options_value": "170000000"},
             "awardee_data": {
@@ -121,6 +125,8 @@ def test_extract_contract_details():
     assert result["reason"] == "Exercise An Option"
     assert result["desc"] == "Test description\nwith newline"
     assert result["piid"] == "123456789"
+    assert result["pop_end_date"] == "06/30/2025"
+    assert result["contract_end_date"] == "06/30/2026"
 
 
 def test_extract_contract_details_fallback_to_awardee_name():
@@ -141,6 +147,8 @@ def test_extract_contract_details_fallback_to_awardee_name():
     result = search.extract_contract_details(award_summary)
 
     assert result["company"] == "Test Company"
+    assert result["pop_end_date"] == ""
+    assert result["contract_end_date"] == ""
 
 
 def test_extract_contract_details_empty_obligation():
@@ -161,6 +169,8 @@ def test_extract_contract_details_empty_obligation():
     result = search.extract_contract_details(award_summary)
 
     assert result["obligation"] == ""
+    assert result["pop_end_date"] == ""
+    assert result["contract_end_date"] == ""
 
 
 def test_format_results_with_contract_no():
@@ -178,6 +188,8 @@ def test_format_results_with_contract_no():
                     "total_value": "$170,000,000",
                     "desc": "Test description",
                     "piid": "123456789",
+                    "pop_end_date": "06/30/2025",
+                    "contract_end_date": "06/30/2026",
                 }
             ],
         }
@@ -198,6 +210,8 @@ def test_format_results_with_contract_no():
     assert "Exercise An Option" in result[2]["text"]
     assert "$50,000" in result[2]["text"]
     assert "$170,000,000" in result[2]["text"]
+    assert "06/30/2025" in result[2]["text"]
+    assert "06/30/2026" in result[2]["text"]
     assert "Test description" in result[2]["text"]
 
 
@@ -216,6 +230,8 @@ def test_format_results_with_naics():
                     "total_value": "$170,000,000",
                     "desc": "Test description",
                     "piid": "987654321",
+                    "pop_end_date": "06/30/2025",
+                    "contract_end_date": "06/30/2026",
                 }
             ],
         }
@@ -227,6 +243,8 @@ def test_format_results_with_naics():
     assert "Test Agency" in result[2]["text"]
     assert "541512" in result[2]["text"]
     assert "**Contract:** [987654321]" in result[2]["text"]
+    assert "06/30/2025" in result[2]["text"]
+    assert "06/30/2026" in result[2]["text"]
 
 
 def test_format_results_empty():
