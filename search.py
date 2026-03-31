@@ -106,6 +106,20 @@ def extract_contract_details(award_summary: dict) -> dict:
 
     contract_info["piid"] = award_summary.get("contract_id", {}).get("piid", "")
 
+    current_completion = dates.get("current_completion_date", "")
+    if current_completion:
+        parsed_pop = datetime.strptime(current_completion[:10], "%Y-%m-%d")
+        contract_info["pop_end_date"] = parsed_pop.strftime("%m/%d/%Y")
+    else:
+        contract_info["pop_end_date"] = ""
+
+    ultimate_completion = dates.get("ultimate_completion_date", "")
+    if ultimate_completion:
+        parsed_end = datetime.strptime(ultimate_completion[:10], "%Y-%m-%d")
+        contract_info["contract_end_date"] = parsed_end.strftime("%m/%d/%Y")
+    else:
+        contract_info["contract_end_date"] = ""
+
     return contract_info
 
 
@@ -143,6 +157,8 @@ def format_results(raw_results: list[dict]) -> list:
                     f'**Reason:** {detail["reason"]} | '
                     f'**Obligation:** {detail["obligation"]} | '
                     f'**Total Value:** {detail["total_value"]} | '
+                    f'**PoP End Date:** {detail["pop_end_date"]} | '
+                    f'**Contract End Date:** {detail["contract_end_date"]} | '
                     f"**Description:** {desc}"
                 )
 

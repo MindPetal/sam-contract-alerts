@@ -140,14 +140,28 @@ class ContractId(object):
 class Dates(object):
     """Contract dates"""
 
-    types = {"date_signed": "str"}
-    attribute_map = {"date_signed": "dateSigned"}
+    types = {
+        "date_signed": "str",
+        "current_completion_date": "str",
+        "ultimate_completion_date": "str",
+    }
+    attribute_map = {
+        "date_signed": "dateSigned",
+        "current_completion_date": "currentCompletionDate",
+        "ultimate_completion_date": "ultimateCompletionDate",
+    }
 
-    def __init__(self, date_signed=None):
+    def __init__(self, date_signed=None, current_completion_date=None, ultimate_completion_date=None):
         self._date_signed = None
+        self._current_completion_date = None
+        self._ultimate_completion_date = None
         self.discriminator = None
         if date_signed is not None:
             self.date_signed = date_signed
+        if current_completion_date is not None:
+            self.current_completion_date = current_completion_date
+        if ultimate_completion_date is not None:
+            self.ultimate_completion_date = ultimate_completion_date
 
     @property
     def date_signed(self):
@@ -156,6 +170,22 @@ class Dates(object):
     @date_signed.setter
     def date_signed(self, date_signed):
         self._date_signed = date_signed
+
+    @property
+    def current_completion_date(self):
+        return self._current_completion_date
+
+    @current_completion_date.setter
+    def current_completion_date(self, current_completion_date):
+        self._current_completion_date = current_completion_date
+
+    @property
+    def ultimate_completion_date(self):
+        return self._ultimate_completion_date
+
+    @ultimate_completion_date.setter
+    def ultimate_completion_date(self, ultimate_completion_date):
+        self._ultimate_completion_date = ultimate_completion_date
 
     def to_dict(self):
         result = {}
