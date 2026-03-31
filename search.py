@@ -96,6 +96,11 @@ def extract_contract_details(award_summary: dict) -> dict:
     contract_info["obligation"] = f"${float(obligation):,.12g}" if obligation else ""
 
     total_dollars = award_details.get("total_contract_dollars", {})
+    total_obligated = total_dollars.get("total_base_and_exercised_options_value", "")
+    contract_info["total_obligated"] = (
+        f"${float(total_obligated):,.12g}" if total_obligated else ""
+    )
+
     total_value = total_dollars.get("total_base_and_all_options_value", "")
     contract_info["total_value"] = f"${float(total_value):,.12g}" if total_value else ""
 
@@ -156,6 +161,7 @@ def format_results(raw_results: list[dict]) -> list:
                     f'{detail["company"]} | '
                     f'**Reason:** {detail["reason"]} | '
                     f'**Obligation:** {detail["obligation"]} | '
+                    f'**Total Obligated:** {detail["total_obligated"]} | '
                     f'**Total Value:** {detail["total_value"]} | '
                     f'**PoP End Date:** {detail["pop_end_date"]} | '
                     f'**Contract End Date:** {detail["contract_end_date"]} | '
