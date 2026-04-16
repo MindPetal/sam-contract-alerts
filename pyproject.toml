@@ -1,10 +1,29 @@
-[tool.black]
-line-length = 88
-target-version = ['py313']
+[project]
+name = "sam-contract-alerts"
+version = "1.0.0"
+description = "SAM.gov contract awards search and post to MS Teams"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "certifi>=14.05.14",
+    "python-dateutil>=2.5.3",
+    "setuptools>=21.0.0",
+    "six>=1.10",
+    "urllib3>=1.15.1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-mock",
+    "ruff",
+    "ty",
+]
 
 [tool.ruff]
 line-length = 88
 target-version = "py313"
+exclude = ["client/", "build/"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
@@ -12,3 +31,9 @@ ignore = []
 
 [tool.ruff.lint.isort]
 known-first-party = ["client", "search"]
+
+[tool.ty.environment]
+python-version = "3.13"
+
+[tool.ty.src]
+exclude = ["client/", "build/"]

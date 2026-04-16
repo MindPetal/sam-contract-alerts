@@ -17,25 +17,33 @@ The [sam-contract-alerts-run](https://github.com/MindPetal/sam-contract-alerts/a
 
 ## Local execution:
 
-Python 3.13+ required. Create and activate a virtual environment:
+Python 3.13+ required. Install [uv](https://docs.astral.sh/uv/getting-started/installation/) (`brew install uv`) and sync dependencies:
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+uv sync --dev
+```
 
-pip3 install . --use-pep517
+Lint:
+```bash
+uv run ruff check .
+uv run ruff format --check .
+```
+
+Git hook (auto-formats Python files on commit):
+```bash
+git config core.hooksPath hooks
+```
+
+Type check:
+```bash
+uv run ty check
 ```
 
 Tests:
 ```bash
-pytest test_search.py
+uv run pytest test_search.py
 ```
 
 Execute: pass args:
 ```bash
-python3 search.py 'my-sam-api-key' 'my-contract-list' 'my-naics-list' 'my-ms-webhook-url'
-```
-
-Deactivate:
-```bash
-deactivate
+uv run python3 search.py 'my-sam-api-key' 'my-contract-list' 'my-naics-list' 'my-ms-webhook-url'
 ```
