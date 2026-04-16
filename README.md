@@ -12,10 +12,16 @@ The [sam-contract-alerts-run](https://github.com/MindPetal/sam-contract-alerts/a
 |`NAICS_LIST`| A comma separated string of NAICS, agency names and abbr.<br>`541512:THE AGENCY NAME:ABBR`<br>Use the full contracting subtier name (e.g., U.S. AGENCY OF SOMETHING). |
 | `MS_URL`| MS Teams webhook URL for your organization. More info on setting up Teams webhooks: [Create incoming webhooks with Workflows for Microsoft Teams](https://support.microsoft.com/en-us/office/create-incoming-webhooks-with-workflows-for-microsoft-teams-8ae491c7-0394-4861-ba59-055e33f75498)|
 
+## Sample output:
+**Contract:** [1605QR3934879](tbd) | **Signed:** Apr 03, 2026 | **Company:** NAME | **Reason:** OTHER ADMINISTRATIVE ACTION | **Obligation:** $0 | **Total Obligated:** $1,000,000.00 | **Total Value:** $5,000,000.00 | **PoP Start:** Apr 03, 2026 | **PoP End:** Apr 03, 2027 | **Contract End:** Apr 03, 2030 | **Description:** THIS IS THE DESCRIPTION
+
 ## Local execution:
 
-Python 3.13+ required. Install:
+Python 3.13+ required. Create and activate a virtual environment:
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
+
 pip3 install . --use-pep517
 ```
 
@@ -27,4 +33,9 @@ pytest test_search.py
 Execute: pass args:
 ```bash
 python3 search.py 'my-sam-api-key' 'my-contract-list' 'my-naics-list' 'my-ms-webhook-url'
+```
+
+Deactivate:
+```bash
+deactivate
 ```
