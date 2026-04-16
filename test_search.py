@@ -212,7 +212,7 @@ def test_format_results_with_contract_no():
     assert len(result) == 4
     assert (
         result[0]["text"]
-        == f'**{date.today().strftime("%A, %m/%d/%Y")}.** Contract updates.'
+        == f"**{date.today().strftime('%A, %m/%d/%Y')}.** Contract updates."
     )
     assert "Test Contract" in result[2]["text"]
     assert "123456789" in result[2]["text"]

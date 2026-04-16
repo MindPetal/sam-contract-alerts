@@ -142,20 +142,19 @@ def format_results(raw_results: list[dict]) -> list:
     items = []
 
     if raw_results:
-        header = f'**{date.today().strftime("%A, %m/%d/%Y")}.** Contract updates.'
+        header = f"**{date.today().strftime('%A, %m/%d/%Y')}.** Contract updates."
         items += [build_textblock(header), build_textblock("")]
 
         for result in raw_results:
             if "contract_no" in result:
                 content = (
-                    f'**{result["index"]}. {result["contract_nm"]}** - '
-                    f'{result["contract_no"]}'
+                    f"**{result['index']}. {result['contract_nm']}** - "
+                    f"{result['contract_no']}"
                 )
             elif "naics" in result:
                 agency = result["agency"]
                 content = (
-                    f'**{result["index"]}. {agency}** - '
-                    f'NAICS {result["naics"]} updates'
+                    f"**{result['index']}. {agency}** - NAICS {result['naics']} updates"
                 )
 
             for detail in result["contract_details"]:
@@ -163,16 +162,16 @@ def format_results(raw_results: list[dict]) -> list:
                 desc = " ".join(desc.split())
                 contract_url = build_search_url(detail["piid"])
                 content += (
-                    f'\n\n- **Contract:** [{detail["piid"]}]({contract_url}) | '
-                    f'**Signed:** {detail["date"]} | **Company:** '
-                    f'{detail["company"]} | '
-                    f'**Reason:** {detail["reason"]} | '
-                    f'**Obligation:** {detail["obligation"]} | '
-                    f'**Total Obligated:** {detail["total_obligated"]} | '
-                    f'**Total Value:** {detail["total_value"]} | '
-                    f'**PoP Start:** {detail["pop_start"]} | '
-                    f'**PoP End:** {detail["pop_end_date"]} | '
-                    f'**Contract End:** {detail["contract_end_date"]} | '
+                    f"\n\n- **Contract:** [{detail['piid']}]({contract_url}) | "
+                    f"**Signed:** {detail['date']} | **Company:** "
+                    f"{detail['company']} | "
+                    f"**Reason:** {detail['reason']} | "
+                    f"**Obligation:** {detail['obligation']} | "
+                    f"**Total Obligated:** {detail['total_obligated']} | "
+                    f"**Total Value:** {detail['total_value']} | "
+                    f"**PoP Start:** {detail['pop_start']} | "
+                    f"**PoP End:** {detail['pop_end_date']} | "
+                    f"**Contract End:** {detail['contract_end_date']} | "
                     f"**Description:** {desc}"
                 )
 
