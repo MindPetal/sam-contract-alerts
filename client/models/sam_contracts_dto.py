@@ -1,4 +1,5 @@
 """Combined SAM.gov contract models"""
+
 import pprint
 import six
 
@@ -28,11 +29,22 @@ class ReasonForModification(object):
         for attr, _ in six.iteritems(self.types):
             value = getattr(self, attr)
             if isinstance(value, list):
-                result[attr] = list(map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value))
+                result[attr] = list(
+                    map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value)
+                )
             elif hasattr(value, "to_dict"):
                 result[attr] = value.to_dict()
             elif isinstance(value, dict):
-                result[attr] = dict(map(lambda item: (item[0], item[1].to_dict()) if hasattr(item[1], "to_dict") else item, value.items()))
+                result[attr] = dict(
+                    map(
+                        lambda item: (
+                            (item[0], item[1].to_dict())
+                            if hasattr(item[1], "to_dict")
+                            else item
+                        ),
+                        value.items(),
+                    )
+                )
             else:
                 result[attr] = value
         if issubclass(ReasonForModification, dict):
@@ -69,7 +81,9 @@ class ContractId(object):
         "reason_for_modification": "reasonForModification",
     }
 
-    def __init__(self, piid=None, modification_number=None, reason_for_modification=None):
+    def __init__(
+        self, piid=None, modification_number=None, reason_for_modification=None
+    ):
         self._piid = None
         self._modification_number = None
         self._reason_for_modification = None
@@ -110,11 +124,22 @@ class ContractId(object):
         for attr, _ in six.iteritems(self.types):
             value = getattr(self, attr)
             if isinstance(value, list):
-                result[attr] = list(map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value))
+                result[attr] = list(
+                    map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value)
+                )
             elif hasattr(value, "to_dict"):
                 result[attr] = value.to_dict()
             elif isinstance(value, dict):
-                result[attr] = dict(map(lambda item: (item[0], item[1].to_dict()) if hasattr(item[1], "to_dict") else item, value.items()))
+                result[attr] = dict(
+                    map(
+                        lambda item: (
+                            (item[0], item[1].to_dict())
+                            if hasattr(item[1], "to_dict")
+                            else item
+                        ),
+                        value.items(),
+                    )
+                )
             else:
                 result[attr] = value
         if issubclass(ContractId, dict):
@@ -142,22 +167,33 @@ class Dates(object):
 
     types = {
         "date_signed": "str",
+        "period_of_performance_start_date": "str",
         "current_completion_date": "str",
         "ultimate_completion_date": "str",
     }
     attribute_map = {
         "date_signed": "dateSigned",
+        "period_of_performance_start_date": "periodOfPerformanceStartDate",
         "current_completion_date": "currentCompletionDate",
         "ultimate_completion_date": "ultimateCompletionDate",
     }
 
-    def __init__(self, date_signed=None, current_completion_date=None, ultimate_completion_date=None):
+    def __init__(
+        self,
+        date_signed=None,
+        period_of_performance_start_date=None,
+        current_completion_date=None,
+        ultimate_completion_date=None,
+    ):
         self._date_signed = None
+        self._period_of_performance_start_date = None
         self._current_completion_date = None
         self._ultimate_completion_date = None
         self.discriminator = None
         if date_signed is not None:
             self.date_signed = date_signed
+        if period_of_performance_start_date is not None:
+            self.period_of_performance_start_date = period_of_performance_start_date
         if current_completion_date is not None:
             self.current_completion_date = current_completion_date
         if ultimate_completion_date is not None:
@@ -170,6 +206,14 @@ class Dates(object):
     @date_signed.setter
     def date_signed(self, date_signed):
         self._date_signed = date_signed
+
+    @property
+    def period_of_performance_start_date(self):
+        return self._period_of_performance_start_date
+
+    @period_of_performance_start_date.setter
+    def period_of_performance_start_date(self, period_of_performance_start_date):
+        self._period_of_performance_start_date = period_of_performance_start_date
 
     @property
     def current_completion_date(self):
@@ -192,11 +236,22 @@ class Dates(object):
         for attr, _ in six.iteritems(self.types):
             value = getattr(self, attr)
             if isinstance(value, list):
-                result[attr] = list(map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value))
+                result[attr] = list(
+                    map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value)
+                )
             elif hasattr(value, "to_dict"):
                 result[attr] = value.to_dict()
             elif isinstance(value, dict):
-                result[attr] = dict(map(lambda item: (item[0], item[1].to_dict()) if hasattr(item[1], "to_dict") else item, value.items()))
+                result[attr] = dict(
+                    map(
+                        lambda item: (
+                            (item[0], item[1].to_dict())
+                            if hasattr(item[1], "to_dict")
+                            else item
+                        ),
+                        value.items(),
+                    )
+                )
             else:
                 result[attr] = value
         if issubclass(Dates, dict):
@@ -244,11 +299,22 @@ class Dollars(object):
         for attr, _ in six.iteritems(self.types):
             value = getattr(self, attr)
             if isinstance(value, list):
-                result[attr] = list(map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value))
+                result[attr] = list(
+                    map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value)
+                )
             elif hasattr(value, "to_dict"):
                 result[attr] = value.to_dict()
             elif isinstance(value, dict):
-                result[attr] = dict(map(lambda item: (item[0], item[1].to_dict()) if hasattr(item[1], "to_dict") else item, value.items()))
+                result[attr] = dict(
+                    map(
+                        lambda item: (
+                            (item[0], item[1].to_dict())
+                            if hasattr(item[1], "to_dict")
+                            else item
+                        ),
+                        value.items(),
+                    )
+                )
             else:
                 result[attr] = value
         if issubclass(Dollars, dict):
@@ -277,15 +343,20 @@ class TotalContractDollars(object):
     types = {
         "total_action_obligation": "str",
         "total_base_and_exercised_options_value": "str",
-        "total_base_and_all_options_value": "str"
+        "total_base_and_all_options_value": "str",
     }
     attribute_map = {
         "total_action_obligation": "totalActionObligation",
         "total_base_and_exercised_options_value": "totalBaseAndExercisedOptionsValue",
-        "total_base_and_all_options_value": "totalBaseAndAllOptionsValue"
+        "total_base_and_all_options_value": "totalBaseAndAllOptionsValue",
     }
 
-    def __init__(self, total_action_obligation=None, total_base_and_exercised_options_value=None, total_base_and_all_options_value=None):
+    def __init__(
+        self,
+        total_action_obligation=None,
+        total_base_and_exercised_options_value=None,
+        total_base_and_all_options_value=None,
+    ):
         self._total_action_obligation = None
         self._total_base_and_exercised_options_value = None
         self._total_base_and_all_options_value = None
@@ -293,7 +364,9 @@ class TotalContractDollars(object):
         if total_action_obligation is not None:
             self.total_action_obligation = total_action_obligation
         if total_base_and_exercised_options_value is not None:
-            self.total_base_and_exercised_options_value = total_base_and_exercised_options_value
+            self.total_base_and_exercised_options_value = (
+                total_base_and_exercised_options_value
+            )
         if total_base_and_all_options_value is not None:
             self.total_base_and_all_options_value = total_base_and_all_options_value
 
@@ -310,8 +383,12 @@ class TotalContractDollars(object):
         return self._total_base_and_exercised_options_value
 
     @total_base_and_exercised_options_value.setter
-    def total_base_and_exercised_options_value(self, total_base_and_exercised_options_value):
-        self._total_base_and_exercised_options_value = total_base_and_exercised_options_value
+    def total_base_and_exercised_options_value(
+        self, total_base_and_exercised_options_value
+    ):
+        self._total_base_and_exercised_options_value = (
+            total_base_and_exercised_options_value
+        )
 
     @property
     def total_base_and_all_options_value(self):
@@ -326,11 +403,22 @@ class TotalContractDollars(object):
         for attr, _ in six.iteritems(self.types):
             value = getattr(self, attr)
             if isinstance(value, list):
-                result[attr] = list(map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value))
+                result[attr] = list(
+                    map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value)
+                )
             elif hasattr(value, "to_dict"):
                 result[attr] = value.to_dict()
             elif isinstance(value, dict):
-                result[attr] = dict(map(lambda item: (item[0], item[1].to_dict()) if hasattr(item[1], "to_dict") else item, value.items()))
+                result[attr] = dict(
+                    map(
+                        lambda item: (
+                            (item[0], item[1].to_dict())
+                            if hasattr(item[1], "to_dict")
+                            else item
+                        ),
+                        value.items(),
+                    )
+                )
             else:
                 result[attr] = value
         if issubclass(TotalContractDollars, dict):
@@ -392,11 +480,22 @@ class AwardeeHeader(object):
         for attr, _ in six.iteritems(self.types):
             value = getattr(self, attr)
             if isinstance(value, list):
-                result[attr] = list(map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value))
+                result[attr] = list(
+                    map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value)
+                )
             elif hasattr(value, "to_dict"):
                 result[attr] = value.to_dict()
             elif isinstance(value, dict):
-                result[attr] = dict(map(lambda item: (item[0], item[1].to_dict()) if hasattr(item[1], "to_dict") else item, value.items()))
+                result[attr] = dict(
+                    map(
+                        lambda item: (
+                            (item[0], item[1].to_dict())
+                            if hasattr(item[1], "to_dict")
+                            else item
+                        ),
+                        value.items(),
+                    )
+                )
             else:
                 result[attr] = value
         if issubclass(AwardeeHeader, dict):
@@ -433,11 +532,22 @@ class AwardeeLocation(object):
         for attr, _ in six.iteritems(self.types):
             value = getattr(self, attr)
             if isinstance(value, list):
-                result[attr] = list(map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value))
+                result[attr] = list(
+                    map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value)
+                )
             elif hasattr(value, "to_dict"):
                 result[attr] = value.to_dict()
             elif isinstance(value, dict):
-                result[attr] = dict(map(lambda item: (item[0], item[1].to_dict()) if hasattr(item[1], "to_dict") else item, value.items()))
+                result[attr] = dict(
+                    map(
+                        lambda item: (
+                            (item[0], item[1].to_dict())
+                            if hasattr(item[1], "to_dict")
+                            else item
+                        ),
+                        value.items(),
+                    )
+                )
             else:
                 result[attr] = value
         if issubclass(AwardeeLocation, dict):
@@ -502,11 +612,22 @@ class AwardeeData(object):
         for attr, _ in six.iteritems(self.types):
             value = getattr(self, attr)
             if isinstance(value, list):
-                result[attr] = list(map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value))
+                result[attr] = list(
+                    map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value)
+                )
             elif hasattr(value, "to_dict"):
                 result[attr] = value.to_dict()
             elif isinstance(value, dict):
-                result[attr] = dict(map(lambda item: (item[0], item[1].to_dict()) if hasattr(item[1], "to_dict") else item, value.items()))
+                result[attr] = dict(
+                    map(
+                        lambda item: (
+                            (item[0], item[1].to_dict())
+                            if hasattr(item[1], "to_dict")
+                            else item
+                        ),
+                        value.items(),
+                    )
+                )
             else:
                 result[attr] = value
         if issubclass(AwardeeData, dict):
@@ -533,13 +654,17 @@ class ProductOrServiceInformation(object):
     """Product or service information"""
 
     types = {"description_of_contract_requirement": "str"}
-    attribute_map = {"description_of_contract_requirement": "descriptionOfContractRequirement"}
+    attribute_map = {
+        "description_of_contract_requirement": "descriptionOfContractRequirement"
+    }
 
     def __init__(self, description_of_contract_requirement=None):
         self._description_of_contract_requirement = None
         self.discriminator = None
         if description_of_contract_requirement is not None:
-            self.description_of_contract_requirement = description_of_contract_requirement
+            self.description_of_contract_requirement = (
+                description_of_contract_requirement
+            )
 
     @property
     def description_of_contract_requirement(self):
@@ -554,11 +679,22 @@ class ProductOrServiceInformation(object):
         for attr, _ in six.iteritems(self.types):
             value = getattr(self, attr)
             if isinstance(value, list):
-                result[attr] = list(map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value))
+                result[attr] = list(
+                    map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value)
+                )
             elif hasattr(value, "to_dict"):
                 result[attr] = value.to_dict()
             elif isinstance(value, dict):
-                result[attr] = dict(map(lambda item: (item[0], item[1].to_dict()) if hasattr(item[1], "to_dict") else item, value.items()))
+                result[attr] = dict(
+                    map(
+                        lambda item: (
+                            (item[0], item[1].to_dict())
+                            if hasattr(item[1], "to_dict")
+                            else item
+                        ),
+                        value.items(),
+                    )
+                )
             else:
                 result[attr] = value
         if issubclass(ProductOrServiceInformation, dict):
@@ -599,7 +735,14 @@ class AwardDetails(object):
         "product_or_service_information": "productOrServiceInformation",
     }
 
-    def __init__(self, dates=None, dollars=None, total_contract_dollars=None, awardee_data=None, product_or_service_information=None):
+    def __init__(
+        self,
+        dates=None,
+        dollars=None,
+        total_contract_dollars=None,
+        awardee_data=None,
+        product_or_service_information=None,
+    ):
         self._dates = None
         self._dollars = None
         self._total_contract_dollars = None
@@ -662,11 +805,22 @@ class AwardDetails(object):
         for attr, _ in six.iteritems(self.types):
             value = getattr(self, attr)
             if isinstance(value, list):
-                result[attr] = list(map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value))
+                result[attr] = list(
+                    map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value)
+                )
             elif hasattr(value, "to_dict"):
                 result[attr] = value.to_dict()
             elif isinstance(value, dict):
-                result[attr] = dict(map(lambda item: (item[0], item[1].to_dict()) if hasattr(item[1], "to_dict") else item, value.items()))
+                result[attr] = dict(
+                    map(
+                        lambda item: (
+                            (item[0], item[1].to_dict())
+                            if hasattr(item[1], "to_dict")
+                            else item
+                        ),
+                        value.items(),
+                    )
+                )
             else:
                 result[attr] = value
         if issubclass(AwardDetails, dict):
@@ -731,11 +885,22 @@ class AwardSummary(object):
         for attr, _ in six.iteritems(self.types):
             value = getattr(self, attr)
             if isinstance(value, list):
-                result[attr] = list(map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value))
+                result[attr] = list(
+                    map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value)
+                )
             elif hasattr(value, "to_dict"):
                 result[attr] = value.to_dict()
             elif isinstance(value, dict):
-                result[attr] = dict(map(lambda item: (item[0], item[1].to_dict()) if hasattr(item[1], "to_dict") else item, value.items()))
+                result[attr] = dict(
+                    map(
+                        lambda item: (
+                            (item[0], item[1].to_dict())
+                            if hasattr(item[1], "to_dict")
+                            else item
+                        ),
+                        value.items(),
+                    )
+                )
             else:
                 result[attr] = value
         if issubclass(AwardSummary, dict):
@@ -826,11 +991,22 @@ class AwardResponse(object):
         for attr, _ in six.iteritems(self.types):
             value = getattr(self, attr)
             if isinstance(value, list):
-                result[attr] = list(map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value))
+                result[attr] = list(
+                    map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value)
+                )
             elif hasattr(value, "to_dict"):
                 result[attr] = value.to_dict()
             elif isinstance(value, dict):
-                result[attr] = dict(map(lambda item: (item[0], item[1].to_dict()) if hasattr(item[1], "to_dict") else item, value.items()))
+                result[attr] = dict(
+                    map(
+                        lambda item: (
+                            (item[0], item[1].to_dict())
+                            if hasattr(item[1], "to_dict")
+                            else item
+                        ),
+                        value.items(),
+                    )
+                )
             else:
                 result[attr] = value
         if issubclass(AwardResponse, dict):
