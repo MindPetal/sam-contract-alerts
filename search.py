@@ -60,10 +60,13 @@ def search(
     time.sleep(4)
 
     if api_response is None:
+        log.info("API response is None")
         return []
 
     response_dict = api_response.to_dict()
-    return response_dict.get("award_summary") or []
+    results = response_dict.get("award_summary") or []
+    log.info("API response count: %d (date: %s)", len(results), yday)
+    return results
 
 
 def build_textblock(content: str) -> dict:
@@ -302,6 +305,7 @@ def process_search(
 ) -> list:
     """Prepare sam.gov search and format results."""
     yday = (datetime.now() - timedelta(days=1)).strftime("%m/%d/%Y")
+    log.info("Searching for date: %s", yday)
 
     contract_results = search_contracts(api_client, sam_api_key, contract_list, yday)
     naics_results = search_naics(api_client, sam_api_key, naics_list, yday)
