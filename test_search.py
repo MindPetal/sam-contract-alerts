@@ -112,6 +112,9 @@ def test_extract_contract_details():
                     "awardee_name": "Test Company",
                     "legal_business_name": "Test Company Inc",
                 },
+                "awardee_uei_information": {
+                    "unique_entity_id": "SAMPLEUEI12345",
+                },
                 "awardee_location": {},
             },
             "product_or_service_information": {
@@ -124,6 +127,7 @@ def test_extract_contract_details():
 
     assert result["date"] == "Feb 25, 2024"
     assert result["company"] == "Test Company"
+    assert result["unique_entity_id"] == "SAMPLEUEI12345"
     assert result["obligation"] == "$50,000"
     assert result["total_obligated"] == "$86,974,480.71"
     assert result["total_value"] == "$170,000,000"
@@ -153,6 +157,7 @@ def test_extract_contract_details_fallback_to_awardee_name():
     result = search.extract_contract_details(award_summary)
 
     assert result["company"] == "Test Company"
+    assert result["unique_entity_id"] == ""
     assert result["total_obligated"] == ""
     assert result["pop_start"] == ""
     assert result["pop_end_date"] == ""
@@ -199,6 +204,7 @@ def test_format_results_with_contract_no():
                     "total_value": "$170,000,000",
                     "desc": "Test description",
                     "piid": "123456789",
+                    "unique_entity_id": "SAMPLEUEI12345",
                     "pop_start": "Mar 01, 2024",
                     "pop_end_date": "Jun 30, 2025",
                     "contract_end_date": "Jun 30, 2026",
@@ -219,6 +225,10 @@ def test_format_results_with_contract_no():
     assert "**Contract:** [123456789]" in result[2]["text"]
     assert "sam.gov" in result[2]["text"]
     assert "Test Company" in result[2]["text"]
+    assert (
+        "[Test Company](https://sam.gov/entities/view/SAMPLEUEI12345/coreData?status=Active)"
+        in result[2]["text"]
+    )
     assert "Exercise An Option" in result[2]["text"]
     assert "$50,000" in result[2]["text"]
     assert "$86,974,480.71" in result[2]["text"]
@@ -275,6 +285,14 @@ def test_build_search_url_contract_no():
 
     assert "123456789" in result
     assert "sam.gov" in result
+
+
+def test_build_entity_url():
+    result = search.build_entity_url("SAMPLEUEI12345")
+
+    assert (
+        result == "https://sam.gov/entities/view/SAMPLEUEI12345/coreData?status=Active"
+    )
 
 
 def test_search_contracts(mocker, api_client):

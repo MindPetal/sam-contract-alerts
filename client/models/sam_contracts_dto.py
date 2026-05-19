@@ -570,26 +570,99 @@ class AwardeeLocation(object):
         return not self == other
 
 
+class AwardeeUEIInformation(object):
+    """Awardee UEI information"""
+
+    types = {"unique_entity_id": "str"}
+    attribute_map = {"unique_entity_id": "uniqueEntityId"}
+
+    def __init__(self, unique_entity_id=None):
+        self._unique_entity_id = None
+        self.discriminator = None
+        if unique_entity_id is not None:
+            self.unique_entity_id = unique_entity_id
+
+    @property
+    def unique_entity_id(self):
+        return self._unique_entity_id
+
+    @unique_entity_id.setter
+    def unique_entity_id(self, unique_entity_id):
+        self._unique_entity_id = unique_entity_id
+
+    def to_dict(self):
+        result = {}
+        for attr, _ in six.iteritems(self.types):
+            value = getattr(self, attr)
+            if isinstance(value, list):
+                result[attr] = list(
+                    map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value)
+                )
+            elif hasattr(value, "to_dict"):
+                result[attr] = value.to_dict()
+            elif isinstance(value, dict):
+                result[attr] = dict(
+                    map(
+                        lambda item: (
+                            (item[0], item[1].to_dict())
+                            if hasattr(item[1], "to_dict")
+                            else item
+                        ),
+                        value.items(),
+                    )
+                )
+            else:
+                result[attr] = value
+        if issubclass(AwardeeUEIInformation, dict):
+            for key, value in self.items():
+                result[key] = value
+        return result
+
+    def to_str(self):
+        return pprint.pformat(self.to_dict())
+
+    def __repr__(self):
+        return self.to_str()
+
+    def __eq__(self, other):
+        if not isinstance(other, AwardeeUEIInformation):
+            return False
+        return self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not self == other
+
+
 class AwardeeData(object):
     """Awardee data"""
 
     types = {
         "awardee_header": "AwardeeHeader",
         "awardee_location": "AwardeeLocation",
+        "awardee_uei_information": "AwardeeUEIInformation",
     }
     attribute_map = {
         "awardee_header": "awardeeHeader",
         "awardee_location": "awardeeLocation",
+        "awardee_uei_information": "awardeeUEIInformation",
     }
 
-    def __init__(self, awardee_header=None, awardee_location=None):
+    def __init__(
+        self,
+        awardee_header=None,
+        awardee_location=None,
+        awardee_uei_information=None,
+    ):
         self._awardee_header = None
         self._awardee_location = None
+        self._awardee_uei_information = None
         self.discriminator = None
         if awardee_header is not None:
             self.awardee_header = awardee_header
         if awardee_location is not None:
             self.awardee_location = awardee_location
+        if awardee_uei_information is not None:
+            self.awardee_uei_information = awardee_uei_information
 
     @property
     def awardee_header(self):
@@ -606,6 +679,14 @@ class AwardeeData(object):
     @awardee_location.setter
     def awardee_location(self, awardee_location):
         self._awardee_location = awardee_location
+
+    @property
+    def awardee_uei_information(self):
+        return self._awardee_uei_information
+
+    @awardee_uei_information.setter
+    def awardee_uei_information(self, awardee_uei_information):
+        self._awardee_uei_information = awardee_uei_information
 
     def to_dict(self):
         result = {}

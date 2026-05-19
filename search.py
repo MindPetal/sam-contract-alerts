@@ -89,8 +89,12 @@ def extract_contract_details(award_summary: dict) -> dict:
     parsed_date = datetime.strptime(date_signed, "%Y-%m-%d")
     contract_info["date"] = parsed_date.strftime("%b %d, %Y")
 
-    awardee_data = award_details.get("awardee_data", {}).get("awardee_header", {})
-    contract_info["company"] = awardee_data.get("awardee_name", "")
+    awardee_data = award_details.get("awardee_data", {})
+    awardee_header = awardee_data.get("awardee_header", {})
+    contract_info["company"] = awardee_header.get("awardee_name", "")
+
+    awardee_uei = awardee_data.get("awardee_uei_information", {}) or {}
+    contract_info["unique_entity_id"] = awardee_uei.get("unique_entity_id", "")
 
     reason = award_summary.get("contract_id", {}).get("reason_for_modification") or {}
     contract_info["reason"] = reason.get("name", "")
@@ -164,10 +168,16 @@ def format_results(raw_results: list[dict]) -> list:
                 desc = detail["desc"].replace("|!#^", " ").replace("\n", " ")
                 desc = " ".join(desc.split())
                 contract_url = build_search_url(detail["piid"])
+                unique_entity_id = detail.get("unique_entity_id", "")
+                if unique_entity_id and detail["company"]:
+                    entity_url = build_entity_url(unique_entity_id)
+                    company_text = f"[{detail['company']}]({entity_url})"
+                else:
+                    company_text = detail["company"]
                 content += (
                     f"\n\n- **Contract:** [{detail['piid']}]({contract_url}) | "
                     f"**Signed:** {detail['date']} | **Company:** "
-                    f"{detail['company']} | "
+                    f"{company_text} | "
                     f"**Reason:** {detail['reason']} | "
                     f"**Obligation:** {detail['obligation']} | "
                     f"**Total Obligated:** {detail['total_obligated']} | "
@@ -192,6 +202,14 @@ def build_search_url(piid: str) -> str:
         f"https://sam.gov/search/?sfm%5BsimpleSearch%5D%5BkeywordTags%5D%5B0%5D%5Bkey%5D={piid}"
         f"&sfm%5BsimpleSearch%5D%5BkeywordTags%5D%5B0%5D%5Bvalue%5D={piid}"
     )
+
+
+def build_entity_url(unique_entity_id: str) -> str:
+    """
+    Build SAM.gov entity URL for viewing an awardee's core data
+    """
+
+    return f"https://sam.gov/entities/view/{unique_entity_id}/coreData?status=Active"
 
 
 def search_contracts(
