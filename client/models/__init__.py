@@ -8,6 +8,7 @@ from client.models.sam_contracts_dto import (
     AwardeeData,
     AwardeeHeader,
     AwardeeLocation,
+    AwardeeUEIInformation,
     ContractId,
     Dates,
     Dollars,
