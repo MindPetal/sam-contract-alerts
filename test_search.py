@@ -215,28 +215,34 @@ def test_format_results_with_contract_no():
 
     result = search.format_results(raw_results)
 
-    assert len(result) == 4
+    assert len(result) == 5
     assert (
         result[0]["text"]
         == f"**{date.today().strftime('%A, %m/%d/%Y')}.** Contract updates."
     )
     assert "Test Contract" in result[2]["text"]
     assert "123456789" in result[2]["text"]
-    assert "**Contract:** [123456789]" in result[2]["text"]
-    assert "sam.gov" in result[2]["text"]
-    assert "Test Company" in result[2]["text"]
+
+    table = result[3]
+    assert table["type"] == "Table"
+    assert len(table["rows"]) == 1
+    row_text = table["rows"][0]["cells"][0]["items"][0]["text"]
+    assert " | " in row_text
+    assert "**Contract:** [123456789]" in row_text
+    assert "sam.gov" in row_text
+    assert "Test Company" in row_text
     assert (
         "[Test Company](https://sam.gov/entities/view/SAMPLEUEI12345/coreData?status=Active)"
-        in result[2]["text"]
+        in row_text
     )
-    assert "Exercise An Option" in result[2]["text"]
-    assert "$50,000" in result[2]["text"]
-    assert "$86,974,480.71" in result[2]["text"]
-    assert "$170,000,000" in result[2]["text"]
-    assert "Mar 01, 2024" in result[2]["text"]
-    assert "Jun 30, 2025" in result[2]["text"]
-    assert "Jun 30, 2026" in result[2]["text"]
-    assert "Test description" in result[2]["text"]
+    assert "Exercise An Option" in row_text
+    assert "$50,000" in row_text
+    assert "$86,974,480.71" in row_text
+    assert "$170,000,000" in row_text
+    assert "Mar 01, 2024" in row_text
+    assert "Jun 30, 2025" in row_text
+    assert "Jun 30, 2026" in row_text
+    assert "Test description" in row_text
 
 
 def test_format_results_with_naics():
@@ -265,13 +271,59 @@ def test_format_results_with_naics():
 
     result = search.format_results(raw_results)
 
-    assert len(result) == 4
+    assert len(result) == 5
     assert "Test Agency" in result[2]["text"]
     assert "541512" in result[2]["text"]
-    assert "**Contract:** [987654321]" in result[2]["text"]
-    assert "$86,974,480.71" in result[2]["text"]
-    assert "Jun 30, 2025" in result[2]["text"]
-    assert "Jun 30, 2026" in result[2]["text"]
+
+    table = result[3]
+    assert table["type"] == "Table"
+    assert len(table["rows"]) == 1
+    row_text = table["rows"][0]["cells"][0]["items"][0]["text"]
+    assert " | " in row_text
+    assert "**Contract:** [987654321]" in row_text
+    assert "$86,974,480.71" in row_text
+    assert "Jun 30, 2025" in row_text
+    assert "Jun 30, 2026" in row_text
+
+
+def test_format_results_multiple_details_single_table():
+    detail = {
+        "date": "Feb 25, 2024",
+        "company": "Test Company",
+        "reason": "Exercise An Option",
+        "obligation": "$50,000",
+        "total_obligated": "$86,974,480.71",
+        "total_value": "$170,000,000",
+        "desc": "Test description",
+        "piid": "PIID-A",
+        "pop_start": "Mar 01, 2024",
+        "pop_end_date": "Jun 30, 2025",
+        "contract_end_date": "Jun 30, 2026",
+    }
+    raw_results = [
+        {
+            "index": 1,
+            "contract_no": "IDV123",
+            "contract_nm": "Test IDV",
+            "contract_details": [
+                {**detail, "piid": "PIID-A"},
+                {**detail, "piid": "PIID-B"},
+            ],
+        }
+    ]
+
+    result = search.format_results(raw_results)
+
+    # One heading + one table (with a row per contract) under the numbered item
+    tables = [item for item in result if item.get("type") == "Table"]
+    assert len(tables) == 1
+
+    rows = tables[0]["rows"]
+    assert len(rows) == 2
+    assert rows[0]["style"] == "default"
+    assert rows[1]["style"] == "emphasis"
+    assert "PIID-A" in rows[0]["cells"][0]["items"][0]["text"]
+    assert "PIID-B" in rows[1]["cells"][0]["items"][0]["text"]
 
 
 def test_format_results_empty():
@@ -525,16 +577,34 @@ def test_process_search_dedupes_piids(mocker, api_client):
         "541512:Test Agency:TA",
     )
 
-    text_blocks = [item.get("text", "") for item in result if item.get("text")]
+    # Associate each detail table with the heading that precedes it
+    sections: dict[str, list[str]] = {}
+    current_heading = None
 
-    naics_blocks = [b for b in text_blocks if "TA" in b and "NAICS" in b]
-    assert len(naics_blocks) == 1
-    assert "UNIQUE456" in naics_blocks[0]
-    assert "DUPLICATE123" not in naics_blocks[0]
+    for item in result:
+        if item.get("type") == "TextBlock" and item.get("text"):
+            current_heading = item["text"]
+        elif item.get("type") == "Table":
+            row_text = "\n".join(
+                row["cells"][0]["items"][0]["text"] for row in item["rows"]
+            )
+            sections.setdefault(current_heading, []).append(row_text)
 
-    contract_blocks = [b for b in text_blocks if "Test Contract" in b]
-    assert len(contract_blocks) == 1
-    assert "DUPLICATE123" in contract_blocks[0]
+    naics_headings = [h for h in sections if h and "TA" in h and "NAICS" in h]
+    assert len(naics_headings) == 1
+
+    naics_text = "\n".join(sections[naics_headings[0]])
+    assert "UNIQUE456" in naics_text
+    assert "DUPLICATE123" not in naics_text
+
+    headings = [
+        item["text"]
+        for item in result
+        if item.get("type") == "TextBlock" and item.get("text")
+    ]
+    contract_headings = [h for h in headings if "Test Contract" in h]
+    assert len(contract_headings) == 1
+    assert "DUPLICATE123" in contract_headings[0]
 
 
 def test_process_search_no_results(mocker, api_client):

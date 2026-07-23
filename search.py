@@ -76,6 +76,67 @@ def build_textblock(content: str) -> dict:
     return {"type": "TextBlock", "text": content, "wrap": True}
 
 
+def build_row(content: str, stripe_index: int) -> dict:
+    """
+    Build a striped single-cell TableRow
+    """
+    return {
+        "type": "TableRow",
+        "style": "emphasis" if stripe_index % 2 else "default",
+        "cells": [
+            {"type": "TableCell", "items": [build_textblock(content)]},
+        ],
+    }
+
+
+def build_detail_content(detail: dict) -> str:
+    """
+    Build the pipe-delimited content string for one contract detail
+    """
+    desc = detail["desc"].replace("|!#^", " ").replace("\n", " ")
+    desc = " ".join(desc.split())
+    contract_url = build_search_url(detail["piid"])
+    unique_entity_id = detail.get("unique_entity_id", "")
+
+    if unique_entity_id and detail["company"]:
+        entity_url = build_entity_url(unique_entity_id)
+        company_text = f"[{detail['company']}]({entity_url})"
+    else:
+        company_text = detail["company"]
+
+    fields = [
+        f"**Contract:** [{detail['piid']}]({contract_url})",
+        f"**Signed:** {detail['date']}",
+        f"**Company:** {company_text}",
+        f"**Reason:** {detail['reason']}",
+        f"**Obligation:** {detail['obligation']}",
+        f"**Total Obligated:** {detail['total_obligated']}",
+        f"**Total Value:** {detail['total_value']}",
+        f"**PoP Start:** {detail['pop_start']}",
+        f"**PoP End:** {detail['pop_end_date']}",
+        f"**Contract End:** {detail['contract_end_date']}",
+        f"**Description:** {desc}",
+    ]
+
+    return " | ".join(fields)
+
+
+def build_details_table(details: list[dict]) -> dict:
+    """
+    Build a striped single-column table with one row per contract detail
+    """
+    return {
+        "type": "Table",
+        "columns": [{"width": 1}],
+        "firstRowAsHeaders": False,
+        "gridStyle": "default",
+        "rows": [
+            build_row(build_detail_content(detail), i)
+            for i, detail in enumerate(details)
+        ],
+    }
+
+
 def extract_contract_details(award_summary: dict) -> dict:
     """
     Extract contract details from award summary
@@ -154,41 +215,19 @@ def format_results(raw_results: list[dict]) -> list:
 
         for result in raw_results:
             if "contract_no" in result:
-                content = (
+                heading = (
                     f"**{result['index']}. {result['contract_nm']}** - "
                     f"{result['contract_no']}"
                 )
             elif "naics" in result:
                 agency = result["agency"]
-                content = (
+                heading = (
                     f"**{result['index']}. {agency}** - NAICS {result['naics']} updates"
                 )
 
-            for detail in result["contract_details"]:
-                desc = detail["desc"].replace("|!#^", " ").replace("\n", " ")
-                desc = " ".join(desc.split())
-                contract_url = build_search_url(detail["piid"])
-                unique_entity_id = detail.get("unique_entity_id", "")
-                if unique_entity_id and detail["company"]:
-                    entity_url = build_entity_url(unique_entity_id)
-                    company_text = f"[{detail['company']}]({entity_url})"
-                else:
-                    company_text = detail["company"]
-                content += (
-                    f"\n\n- **Contract:** [{detail['piid']}]({contract_url}) | "
-                    f"**Signed:** {detail['date']} | **Company:** "
-                    f"{company_text} | "
-                    f"**Reason:** {detail['reason']} | "
-                    f"**Obligation:** {detail['obligation']} | "
-                    f"**Total Obligated:** {detail['total_obligated']} | "
-                    f"**Total Value:** {detail['total_value']} | "
-                    f"**PoP Start:** {detail['pop_start']} | "
-                    f"**PoP End:** {detail['pop_end_date']} | "
-                    f"**Contract End:** {detail['contract_end_date']} | "
-                    f"**Description:** {desc}"
-                )
-
-            items += [build_textblock(content), build_textblock("")]
+            items.append(build_textblock(heading))
+            items.append(build_details_table(result["contract_details"]))
+            items.append(build_textblock(""))
 
     return items
 
@@ -376,7 +415,7 @@ def teams_post(api_client: client.ApiClient, items: list[dict]) -> None:
                         "contentType": "application/vnd.microsoft.card.adaptive",
                         "content": {
                             "type": "AdaptiveCard",
-                            "version": "1.0",
+                            "version": "1.5",
                             "body": [{"type": "Container", "items": items}],
                             "msteams": {"width": "Full"},
                         },
