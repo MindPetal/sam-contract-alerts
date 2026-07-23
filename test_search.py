@@ -579,7 +579,7 @@ def test_process_search_dedupes_piids(mocker, api_client):
 
     # Associate each detail table with the heading that precedes it
     sections: dict[str, list[str]] = {}
-    current_heading = None
+    current_heading = ""
 
     for item in result:
         if item.get("type") == "TextBlock" and item.get("text"):
