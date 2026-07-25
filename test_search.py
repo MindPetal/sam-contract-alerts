@@ -125,7 +125,7 @@ def test_extract_contract_details():
 
     result = search.extract_contract_details(award_summary)
 
-    assert result["date"] == "Feb 25, 2024"
+    assert result["date"] == "02/25/2024"
     assert result["company"] == "Test Company"
     assert result["unique_entity_id"] == "SAMPLEUEI12345"
     assert result["obligation"] == "$50,000"
@@ -134,9 +134,9 @@ def test_extract_contract_details():
     assert result["reason"] == "Exercise An Option"
     assert result["desc"] == "Test description\nwith newline"
     assert result["piid"] == "123456789"
-    assert result["pop_start"] == "Mar 01, 2024"
-    assert result["pop_end_date"] == "Jun 30, 2025"
-    assert result["contract_end_date"] == "Jun 30, 2026"
+    assert result["pop_start"] == "03/01/2024"
+    assert result["pop_end_date"] == "06/30/2025"
+    assert result["contract_end_date"] == "06/30/2026"
 
 
 def test_extract_contract_details_fallback_to_awardee_name():
@@ -228,7 +228,8 @@ def test_format_results_with_contract_no():
     assert len(table["rows"]) == 1
     row_text = table["rows"][0]["cells"][0]["items"][0]["text"]
     assert " | " in row_text
-    assert "**Contract:** [123456789]" in row_text
+    assert "[123456789]" in row_text
+    assert "**Contract:**" not in row_text
     assert "sam.gov" in row_text
     assert "Test Company" in row_text
     assert (
@@ -237,11 +238,11 @@ def test_format_results_with_contract_no():
     )
     assert "Exercise An Option" in row_text
     assert "$50,000" in row_text
-    assert "$86,974,480.71" in row_text
-    assert "$170,000,000" in row_text
-    assert "Mar 01, 2024" in row_text
-    assert "Jun 30, 2025" in row_text
-    assert "Jun 30, 2026" in row_text
+    assert "**To Date:** $86,974,480.71" in row_text
+    assert "**TCV:** $170,000,000" in row_text
+    assert "**Start:** Mar 01, 2024" in row_text
+    assert "**End:** Jun 30, 2025" in row_text
+    assert "**Contract End:** Jun 30, 2026" in row_text
     assert "Test description" in row_text
 
 
@@ -280,10 +281,11 @@ def test_format_results_with_naics():
     assert len(table["rows"]) == 1
     row_text = table["rows"][0]["cells"][0]["items"][0]["text"]
     assert " | " in row_text
-    assert "**Contract:** [987654321]" in row_text
-    assert "$86,974,480.71" in row_text
-    assert "Jun 30, 2025" in row_text
-    assert "Jun 30, 2026" in row_text
+    assert "[987654321]" in row_text
+    assert "**Contract:**" not in row_text
+    assert "**To Date:** $86,974,480.71" in row_text
+    assert "**End:** Jun 30, 2025" in row_text
+    assert "**Contract End:** Jun 30, 2026" in row_text
 
 
 def test_format_results_multiple_details_single_table():

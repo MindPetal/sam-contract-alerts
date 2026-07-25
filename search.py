@@ -105,17 +105,17 @@ def build_detail_content(detail: dict) -> str:
         company_text = detail["company"]
 
     fields = [
-        f"**Contract:** [{detail['piid']}]({contract_url})",
-        f"**Signed:** {detail['date']}",
-        f"**Company:** {company_text}",
-        f"**Reason:** {detail['reason']}",
-        f"**Obligation:** {detail['obligation']}",
-        f"**Total Obligated:** {detail['total_obligated']}",
-        f"**Total Value:** {detail['total_value']}",
-        f"**PoP Start:** {detail['pop_start']}",
-        f"**PoP End:** {detail['pop_end_date']}",
+        f"[{detail['piid']}]({contract_url})",
+        f"{detail['date']}",
+        f"{company_text}",
+        f"{detail['reason']}",
+        f"{detail['obligation']}",
+        f"**To Date:** {detail['total_obligated']}",
+        f"**TCV:** {detail['total_value']}",
+        f"**Start:** {detail['pop_start']}",
+        f"**End:** {detail['pop_end_date']}",
         f"**Contract End:** {detail['contract_end_date']}",
-        f"**Description:** {desc}",
+        f"{desc}",
     ]
 
     return " | ".join(fields)
@@ -148,7 +148,7 @@ def extract_contract_details(award_summary: dict) -> dict:
     dates = award_details.get("dates", {})
     date_signed = dates.get("date_signed", "").split("T")[0]
     parsed_date = datetime.strptime(date_signed, "%Y-%m-%d")
-    contract_info["date"] = parsed_date.strftime("%b %d, %Y")
+    contract_info["date"] = parsed_date.strftime("%m/%d/%Y")
 
     awardee_data = award_details.get("awardee_data", {})
     awardee_header = awardee_data.get("awardee_header", {})
@@ -175,7 +175,7 @@ def extract_contract_details(award_summary: dict) -> dict:
     pop_start = dates.get("period_of_performance_start_date", "")
     if pop_start:
         parsed_pop_start = datetime.strptime(pop_start[:10], "%Y-%m-%d")
-        contract_info["pop_start"] = parsed_pop_start.strftime("%b %d, %Y")
+        contract_info["pop_start"] = parsed_pop_start.strftime("%m/%d/%Y")
     else:
         contract_info["pop_start"] = ""
 
@@ -189,14 +189,14 @@ def extract_contract_details(award_summary: dict) -> dict:
     current_completion = dates.get("current_completion_date", "")
     if current_completion:
         parsed_pop = datetime.strptime(current_completion[:10], "%Y-%m-%d")
-        contract_info["pop_end_date"] = parsed_pop.strftime("%b %d, %Y")
+        contract_info["pop_end_date"] = parsed_pop.strftime("%m/%d/%Y")
     else:
         contract_info["pop_end_date"] = ""
 
     ultimate_completion = dates.get("ultimate_completion_date", "")
     if ultimate_completion:
         parsed_end = datetime.strptime(ultimate_completion[:10], "%Y-%m-%d")
-        contract_info["contract_end_date"] = parsed_end.strftime("%b %d, %Y")
+        contract_info["contract_end_date"] = parsed_end.strftime("%m/%d/%Y")
     else:
         contract_info["contract_end_date"] = ""
 
