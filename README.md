@@ -1,9 +1,9 @@
 # SAM.gov contract awards search and post to MS Teams
 [![sam-contract-alerts-build](https://github.com/MindPetal/sam-contract-alerts/actions/workflows/sam-contract-alerts-build.yaml/badge.svg)](https://github.com/MindPetal/sam-contract-alerts/actions/workflows/sam-contract-alerts-build.yaml) [![sam-contract-alerts-run](https://github.com/MindPetal/sam-contract-alerts/actions/workflows/sam-contract-alerts-run.yaml/badge.svg)](https://github.com/MindPetal/sam-contract-alerts/actions/workflows/sam-contract-alerts-run.yaml)
 
-Python client to search government contract awards from SAM.gov API for the prior day: https://open.gsa.gov/api/contract-awards/
+Python client to search government contract awards from SAM.gov API for the prior day: https://open.gsa.gov/api/contract-awards. 
 
-The [sam-contract-alerts-run](https://github.com/MindPetal/sam-contract-alerts/actions/workflows/sam-contract-alerts-run.yaml) workflow pulls contract updates for specified contracts and NAICS/agencies each day and posts to a designated MS Teams channel. To run this you must obtain and configure as actions repo secrets:
+[sam-contract-alerts-run](https://github.com/MindPetal/sam-contract-alerts/actions/workflows/sam-contract-alerts-run.yaml) pulls contract updates for specified contracts and NAICS/agencies each day and posts to a designated MS Teams channel. To run this you must obtain and configure as actions repo secrets:
 
 | Name | Value |
 | ---- | ----- |
@@ -13,7 +13,7 @@ The [sam-contract-alerts-run](https://github.com/MindPetal/sam-contract-alerts/a
 | `MS_URL`| MS Teams webhook URL for your organization. More info on setting up Teams webhooks: [Create incoming webhooks with Workflows for Microsoft Teams](https://support.microsoft.com/en-us/office/create-incoming-webhooks-with-workflows-for-microsoft-teams-8ae491c7-0394-4861-ba59-055e33f75498)|
 
 ## Sample output:
-**Contract:** [1605QR3934879](tbd) | **Signed:** Apr 03, 2026 | **Company:** NAME | **Reason:** OTHER ADMINISTRATIVE ACTION | **Obligation:** $0 | **Total Obligated:** $1,000,000.00 | **Total Value:** $5,000,000.00 | **PoP Start:** Apr 03, 2026 | **PoP End:** Apr 03, 2027 | **Contract End:** Apr 03, 2030 | **Description:** THIS IS THE DESCRIPTION
+[1605QR3934879](tbd) | 04/03/2026 | Company Name | OTHER ADMINISTRATIVE ACTION | $0 | **To Date:** $1,000,000.00 | **TCV:** $5,000,000.00 | **Start:** 04/03/2026 | **End:** 04/03/2027 | **Contract End:** 04/03/2030 | THIS IS THE DESCRIPTION
 
 ## Local execution:
 
