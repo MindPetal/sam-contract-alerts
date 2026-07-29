@@ -18,6 +18,20 @@ def api_client():
     return client.ApiClient(api_config)
 
 
+def all_text(result: list) -> str:
+    """Concatenate every renderable text string (TextBlocks and table cells)."""
+    texts = []
+    for item in result:
+        if item.get("type") == "TextBlock":
+            texts.append(item.get("text", ""))
+        elif item.get("type") == "Table":
+            for row in item["rows"]:
+                for cell in row["cells"]:
+                    for cell_item in cell["items"]:
+                        texts.append(cell_item.get("text", ""))
+    return "\n".join(texts)
+
+
 def test_search_by_contract_no(mocker, api_client):
     # Mock API response
     api_response = client.AwardResponse()
@@ -215,18 +229,22 @@ def test_format_results_with_contract_no():
 
     result = search.format_results(raw_results)
 
-    assert len(result) == 5
+    assert len(result) == 4
     assert (
         result[0]["text"]
         == f"**{date.today().strftime('%A, %m/%d/%Y')}.** Contract updates."
     )
-    assert "Test Contract" in result[2]["text"]
-    assert "123456789" in result[2]["text"]
 
-    table = result[3]
+    table = result[2]
     assert table["type"] == "Table"
-    assert len(table["rows"]) == 1
-    row_text = table["rows"][0]["cells"][0]["items"][0]["text"]
+    assert table["firstRowAsHeaders"] is True
+    assert len(table["rows"]) == 2
+    heading_text = table["rows"][0]["cells"][0]["items"][0]["text"]
+    assert table["rows"][0]["style"] == "accent"
+    assert "Test Contract" in heading_text
+    assert "123456789" in heading_text
+    assert "1." not in heading_text
+    row_text = table["rows"][1]["cells"][0]["items"][0]["text"]
     assert " | " in row_text
     assert "[123456789]" in row_text
     assert "**Contract:**" not in row_text
@@ -272,14 +290,18 @@ def test_format_results_with_naics():
 
     result = search.format_results(raw_results)
 
-    assert len(result) == 5
-    assert "Test Agency" in result[2]["text"]
-    assert "541512" in result[2]["text"]
+    assert len(result) == 4
+    heading_text = result[2]["rows"][0]["cells"][0]["items"][0]["text"]
+    assert "Test Agency" in heading_text
+    assert "541512" in heading_text
+    assert "1." not in heading_text
 
-    table = result[3]
+    table = result[2]
     assert table["type"] == "Table"
-    assert len(table["rows"]) == 1
-    row_text = table["rows"][0]["cells"][0]["items"][0]["text"]
+    assert table["firstRowAsHeaders"] is True
+    assert len(table["rows"]) == 2
+    assert table["rows"][0]["style"] == "accent"
+    row_text = table["rows"][1]["cells"][0]["items"][0]["text"]
     assert " | " in row_text
     assert "[987654321]" in row_text
     assert "**Contract:**" not in row_text
@@ -316,16 +338,18 @@ def test_format_results_multiple_details_single_table():
 
     result = search.format_results(raw_results)
 
-    # One heading + one table (with a row per contract) under the numbered item
+    # One table with the heading as a header row plus a data row per contract
     tables = [item for item in result if item.get("type") == "Table"]
     assert len(tables) == 1
 
     rows = tables[0]["rows"]
-    assert len(rows) == 2
-    assert rows[0]["style"] == "default"
-    assert rows[1]["style"] == "emphasis"
-    assert "PIID-A" in rows[0]["cells"][0]["items"][0]["text"]
-    assert "PIID-B" in rows[1]["cells"][0]["items"][0]["text"]
+    assert len(rows) == 3
+    assert rows[0]["style"] == "accent"
+    assert "Test IDV" in rows[0]["cells"][0]["items"][0]["text"]
+    assert rows[1]["style"] == "default"
+    assert rows[2]["style"] == "emphasis"
+    assert "PIID-A" in rows[1]["cells"][0]["items"][0]["text"]
+    assert "PIID-B" in rows[2]["cells"][0]["items"][0]["text"]
 
 
 def test_format_results_empty():
@@ -442,7 +466,7 @@ def test_process_search_contract_no(mocker, api_client):
     )
 
     assert len(result) > 0
-    assert any("Test Contract" in item.get("text", "") for item in result)
+    assert "Test Contract" in all_text(result)
 
 
 def test_process_search_naics(mocker, api_client):
@@ -472,7 +496,7 @@ def test_process_search_naics(mocker, api_client):
     )
 
     assert len(result) > 0
-    assert any("TA" in item.get("text", "") for item in result)
+    assert "TA" in all_text(result)
 
 
 def test_process_search_idv(mocker, api_client):
@@ -524,7 +548,7 @@ def test_process_search_idv(mocker, api_client):
 
     assert len(result) > 0
     # Should have both parent and child details
-    assert any("Test Contract" in item.get("text", "") for item in result)
+    assert "Test Contract" in all_text(result)
 
 
 def test_process_search_dedupes_piids(mocker, api_client):
@@ -579,18 +603,16 @@ def test_process_search_dedupes_piids(mocker, api_client):
         "541512:Test Agency:TA",
     )
 
-    # Associate each detail table with the heading that precedes it
+    # Associate each detail table with its header-row heading
     sections: dict[str, list[str]] = {}
-    current_heading = ""
 
     for item in result:
-        if item.get("type") == "TextBlock" and item.get("text"):
-            current_heading = item["text"]
-        elif item.get("type") == "Table":
+        if item.get("type") == "Table":
+            heading = item["rows"][0]["cells"][0]["items"][0]["text"]
             row_text = "\n".join(
-                row["cells"][0]["items"][0]["text"] for row in item["rows"]
+                row["cells"][0]["items"][0]["text"] for row in item["rows"][1:]
             )
-            sections.setdefault(current_heading, []).append(row_text)
+            sections.setdefault(heading, []).append(row_text)
 
     naics_headings = [h for h in sections if h and "TA" in h and "NAICS" in h]
     assert len(naics_headings) == 1
@@ -599,14 +621,9 @@ def test_process_search_dedupes_piids(mocker, api_client):
     assert "UNIQUE456" in naics_text
     assert "DUPLICATE123" not in naics_text
 
-    headings = [
-        item["text"]
-        for item in result
-        if item.get("type") == "TextBlock" and item.get("text")
-    ]
-    contract_headings = [h for h in headings if "Test Contract" in h]
+    contract_headings = [h for h in sections if "Test Contract" in h]
     assert len(contract_headings) == 1
-    assert "DUPLICATE123" in contract_headings[0]
+    assert "DUPLICATE123" in "\n".join(sections[contract_headings[0]])
 
 
 def test_process_search_no_results(mocker, api_client):

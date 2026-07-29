@@ -121,16 +121,25 @@ def build_detail_content(detail: dict) -> str:
     return " | ".join(fields)
 
 
-def build_details_table(details: list[dict]) -> dict:
+def build_details_table(heading: str, details: list[dict]) -> dict:
     """
-    Build a striped single-column table with one row per contract detail
+    Build a striped single-column table with the heading as a header row and
+    one row per contract detail
     """
+    header_row = {
+        "type": "TableRow",
+        "style": "accent",
+        "cells": [
+            {"type": "TableCell", "items": [build_textblock(heading)]},
+        ],
+    }
     return {
         "type": "Table",
         "columns": [{"width": 1}],
-        "firstRowAsHeaders": False,
+        "firstRowAsHeaders": True,
         "gridStyle": "default",
-        "rows": [
+        "rows": [header_row]
+        + [
             build_row(build_detail_content(detail), i)
             for i, detail in enumerate(details)
         ],
@@ -215,18 +224,12 @@ def format_results(raw_results: list[dict]) -> list:
 
         for result in raw_results:
             if "contract_no" in result:
-                heading = (
-                    f"**{result['index']}. {result['contract_nm']}** - "
-                    f"{result['contract_no']}"
-                )
+                heading = f"**{result['contract_nm']}** - {result['contract_no']}"
             elif "naics" in result:
                 agency = result["agency"]
-                heading = (
-                    f"**{result['index']}. {agency}** - NAICS {result['naics']} updates"
-                )
+                heading = f"**{agency}** - NAICS {result['naics']} updates"
 
-            items.append(build_textblock(heading))
-            items.append(build_details_table(result["contract_details"]))
+            items.append(build_details_table(heading, result["contract_details"]))
             items.append(build_textblock(""))
 
     return items
