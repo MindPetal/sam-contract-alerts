@@ -224,10 +224,10 @@ def format_results(raw_results: list[dict]) -> list:
 
         for result in raw_results:
             if "contract_no" in result:
-                heading = f"**{result['contract_nm']}** - {result['contract_no']}"
+                heading = f"**{result['contract_nm']}** - {result['contract_no']}:"
             elif "naics" in result:
                 agency = result["agency"]
-                heading = f"**{agency}** - NAICS {result['naics']} updates"
+                heading = f"**{agency}** - NAICS {result['naics']} updates:"
 
             items.append(build_details_table(heading, result["contract_details"]))
             items.append(build_textblock(""))
