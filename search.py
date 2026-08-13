@@ -105,9 +105,9 @@ def build_detail_content(detail: dict) -> str:
         company_text = detail["company"]
 
     fields = [
-        f"[{detail['piid']}]({contract_url})",
-        f"{detail['date']}",
         f"{company_text}",
+        f"{detail['date']}",
+        f"[{detail['piid']}]({contract_url})",
         f"{detail['reason']}",
         f"{detail['obligation']}",
         f"**To Date:** {detail['total_obligated']}",

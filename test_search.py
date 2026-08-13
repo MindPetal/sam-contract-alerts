@@ -254,6 +254,8 @@ def test_format_results_with_contract_no():
         "[Test Company](https://sam.gov/entities/view/SAMPLEUEI12345/coreData?status=Active)"
         in row_text
     )
+    # company name appears before contract no
+    assert row_text.index("Test Company") < row_text.index("[123456789]")
     assert "Exercise An Option" in row_text
     assert "$50,000" in row_text
     assert "**To Date:** $86,974,480.71" in row_text
@@ -308,6 +310,8 @@ def test_format_results_with_naics():
     assert "**To Date:** $86,974,480.71" in row_text
     assert "**End:** Jun 30, 2025" in row_text
     assert "**Contract End:** Jun 30, 2026" in row_text
+    # company name appears before contract no
+    assert row_text.index("Test Company") < row_text.index("[987654321]")
 
 
 def test_format_results_multiple_details_single_table():
