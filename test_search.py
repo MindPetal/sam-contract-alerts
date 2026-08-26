@@ -356,6 +356,43 @@ def test_format_results_multiple_details_single_table():
     assert "PIID-B" in rows[2]["cells"][0]["items"][0]["text"]
 
 
+def test_format_results_blank_reason_omitted():
+    raw_results = [
+        {
+            "index": 1,
+            "contract_no": "123456789",
+            "contract_nm": "Test Contract",
+            "contract_details": [
+                {
+                    "date": "Feb 25, 2024",
+                    "company": "Test Company",
+                    "reason": "",
+                    "obligation": "$50,000",
+                    "total_obligated": "$86,974,480.71",
+                    "total_value": "$170,000,000",
+                    "desc": "Test description",
+                    "piid": "123456789",
+                    "unique_entity_id": "SAMPLEUEI12345",
+                    "pop_start": "Mar 01, 2024",
+                    "pop_end_date": "Jun 30, 2025",
+                    "contract_end_date": "Jun 30, 2026",
+                }
+            ],
+        }
+    ]
+
+    result = search.format_results(raw_results)
+
+    row_text = result[2]["rows"][1]["cells"][0]["items"][0]["text"]
+    # blank reason field is omitted, so no empty segment between piid and obligation
+    assert "|  |" not in row_text
+    assert "[123456789](https://sam.gov/search/" in row_text
+    assert "$50,000" in row_text
+    # piid link is immediately followed by obligation
+    assert row_text.index("$50,000") - row_text.index("[123456789]") < 200
+    assert "Test description" in row_text
+
+
 def test_format_results_empty():
     result = search.format_results([])
 
