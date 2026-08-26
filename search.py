@@ -108,7 +108,12 @@ def build_detail_content(detail: dict) -> str:
         f"{company_text}",
         f"{detail['date']}",
         f"[{detail['piid']}]({contract_url})",
-        f"{detail['reason']}",
+    ]
+
+    if detail["reason"]:
+        fields.append(f"{detail['reason']}")
+
+    fields += [
         f"{detail['obligation']}",
         f"**To Date:** {detail['total_obligated']}",
         f"**TCV:** {detail['total_value']}",
