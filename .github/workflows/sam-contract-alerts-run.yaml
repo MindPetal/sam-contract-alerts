@@ -3,7 +3,8 @@ name: sam-contract-alerts-run
 on:
   workflow_dispatch:
   schedule:
-    - cron: '24 11 * * *'
+    - cron: '24 07 * * *'
+      timezone: "America/New_York"
 
 permissions:
   contents: read
