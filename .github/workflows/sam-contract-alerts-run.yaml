@@ -26,4 +26,4 @@ jobs:
         CONTRACT_LIST: ${{ secrets.CONTRACT_LIST }}
         NAICS_LIST: ${{ secrets.NAICS_LIST }}
         MS_URL: ${{ secrets.MS_URL }}
-      run: uv run python3 search.py "$SAM_API_KEY" "$CONTRACT_LIST" "$NAICS_LIST" "$MS_URL"
+      run: uv run python3 search.py

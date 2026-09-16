@@ -4,7 +4,7 @@ API and post results to MS Teams.
 """
 
 import logging
-import sys
+import os
 import time
 from datetime import date, datetime, timedelta
 
@@ -462,6 +462,12 @@ def main(
 
 
 """ Read in sam_api_key, contract_list, naics_list, ms_webhook_url
+from the environment
 """
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+    main(
+        os.environ["SAM_API_KEY"],
+        os.environ["CONTRACT_LIST"],
+        os.environ["NAICS_LIST"],
+        os.environ["MS_URL"],
+    )

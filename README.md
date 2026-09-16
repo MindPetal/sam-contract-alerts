@@ -13,7 +13,7 @@ Python client to search government contract awards from SAM.gov API for the prio
 | `MS_URL`| MS Teams webhook URL for your organization. More info on setting up Teams webhooks: [Create incoming webhooks with Workflows for Microsoft Teams](https://support.microsoft.com/en-us/office/create-incoming-webhooks-with-workflows-for-microsoft-teams-8ae491c7-0394-4861-ba59-055e33f75498)|
 
 ## Sample output:
-[1605QR3934879](tbd) | 04/03/2026 | Company Name | OTHER ADMINISTRATIVE ACTION | $0 | **To Date:** $1,000,000.00 | **TCV:** $5,000,000.00 | **Start:** 04/03/2026 | **End:** 04/03/2027 | **Contract End:** 04/03/2030 | THIS IS THE DESCRIPTION
+[COMPANY NAME](tbd) | 09/15/2026 | Contract no. | $100,000.00 | To Date: $100,000.00 | TCV: $100,000.00 | Start: 09/15/2026 | End: 10/30/2026 | Contract End: 10/30/2026 | DESCRIPTION.
 
 ## Local execution:
 
@@ -43,7 +43,11 @@ Tests:
 uv run pytest test_search.py
 ```
 
-Execute: pass args:
+Execute:
 ```bash
-uv run python3 search.py 'my-sam-api-key' 'my-contract-list' 'my-naics-list' 'my-ms-webhook-url'
+SAM_API_KEY='my-sam-api-key' \
+CONTRACT_LIST='my-contract-list' \
+NAICS_LIST='my-naics-list' \
+MS_URL='my-ms-webhook-url' \
+uv run python3 search.py
 ```
