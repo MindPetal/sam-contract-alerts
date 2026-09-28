@@ -9,12 +9,16 @@ from client.models.sam_contracts_dto import (
     AwardeeHeader,
     AwardeeLocation,
     AwardeeUEIInformation,
+    CompetitionInformation,
     ContractId,
+    CoreData,
     Dates,
     Dollars,
+    ExtentCompeted,
     ProductOrServiceInformation,
     ReasonForModification,
     TotalContractDollars,
+    TypeOfSetAside,
 )
 
 # Import MS Teams models

@@ -20,11 +20,15 @@ from client.models.sam_contracts_dto import (
     AwardeeHeader as AwardeeHeader,
     AwardeeLocation as AwardeeLocation,
     AwardeeUEIInformation as AwardeeUEIInformation,
+    CompetitionInformation as CompetitionInformation,
     ContractId as ContractId,
+    CoreData as CoreData,
     Dates as Dates,
     Dollars as Dollars,
+    ExtentCompeted as ExtentCompeted,
     ProductOrServiceInformation as ProductOrServiceInformation,
     ReasonForModification as ReasonForModification,
     TotalContractDollars as TotalContractDollars,
+    TypeOfSetAside as TypeOfSetAside,
 )
 from client.rest import ApiException as ApiException
