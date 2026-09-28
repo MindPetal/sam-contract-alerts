@@ -102,6 +102,94 @@ def test_build_textblock():
     assert result == expected
 
 
+def test_format_competition_sole_source():
+    result = search.format_competition("1", "NOT COMPETED", "NO SET ASIDE USED")
+
+    assert result == "1 offer received. Not competed, no set aside used."
+
+
+def test_format_competition_multiple_offers():
+    result = search.format_competition(
+        "5", "FULL AND OPEN COMPETITION", "SMALL BUSINESS SET ASIDE - TOTAL"
+    )
+
+    assert result == "5 offers received. Small business set aside - total."
+
+
+def test_format_competition_omits_extent_unless_not_competed():
+    result = search.format_competition(
+        "5", "COMPETED UNDER SAP", "SMALL BUSINESS SET ASIDE - TOTAL"
+    )
+
+    assert result == "5 offers received. Small business set aside - total."
+
+
+def test_format_competition_empty():
+    assert search.format_competition("", "", "") == ""
+
+
+def test_format_competition_offers_only():
+    assert search.format_competition("3", "", "") == "3 offers received."
+
+
+def test_format_competition_non_numeric_offers():
+    result = search.format_competition("N/A", "NOT COMPETED", "NO SET ASIDE USED")
+
+    assert result == "Not competed, no set aside used."
+
+
+def test_format_competition_strips_trailing_period_in_source():
+    result = search.format_competition("1", "NOT COMPETED", "NO SET ASIDE USED.")
+
+    assert result == "1 offer received. Not competed, no set aside used."
+
+
+def test_build_detail_content_appends_competition_last():
+    detail = {
+        "date": "Feb 25, 2024",
+        "company": "Test Company",
+        "reason": "Exercise An Option",
+        "obligation": "$50,000",
+        "total_obligated": "$86,974,480.71",
+        "total_value": "$170,000,000",
+        "desc": "Test description",
+        "piid": "123456789",
+        "pop_start": "Mar 01, 2024",
+        "pop_end_date": "Jun 30, 2025",
+        "contract_end_date": "Jun 30, 2026",
+        "competition": "1 offer received. Not competed, no set aside used.",
+    }
+
+    row_text = search.build_detail_content(detail)
+
+    assert row_text.endswith(
+        "Test description | 1 offer received. Not competed, no set aside used."
+    )
+    # competition string appears after the description
+    assert row_text.index("Test description") < row_text.index("1 offer received.")
+
+
+def test_build_detail_content_omits_blank_competition():
+    detail = {
+        "date": "Feb 25, 2024",
+        "company": "Test Company",
+        "reason": "",
+        "obligation": "$50,000",
+        "total_obligated": "$86,974,480.71",
+        "total_value": "$170,000,000",
+        "desc": "Test description",
+        "piid": "123456789",
+        "pop_start": "Mar 01, 2024",
+        "pop_end_date": "Jun 30, 2025",
+        "contract_end_date": "Jun 30, 2026",
+        "competition": "",
+    }
+
+    row_text = search.build_detail_content(detail)
+
+    assert row_text.endswith("Test description")
+
+
 def test_extract_contract_details():
     award_summary = {
         "contract_id": {
@@ -134,10 +222,19 @@ def test_extract_contract_details():
             "product_or_service_information": {
                 "description_of_contract_requirement": "Test description\nwith newline"
             },
+            "competition_information": {
+                "number_of_offers_received": "5",
+            },
+        },
+        "core_data": {
+            "competition_information": {
+                "extent_competed": {"name": "FULL AND OPEN COMPETITION"},
+                "type_of_set_aside": {"name": "SMALL BUSINESS SET ASIDE - TOTAL"},
+            },
         },
     }
 
-    result = search.extract_contract_details(award_summary)
+    result = search.extract_contract_details(award_summary, "02/24/2024")
 
     assert result["date"] == "02/25/2024"
     assert result["company"] == "Test Company"
@@ -145,12 +242,15 @@ def test_extract_contract_details():
     assert result["obligation"] == "$50,000"
     assert result["total_obligated"] == "$86,974,480.71"
     assert result["total_value"] == "$170,000,000"
-    assert result["reason"] == "Exercise An Option"
+    assert result["reason"] == "Exercise an option"
     assert result["desc"] == "Test description\nwith newline"
     assert result["piid"] == "123456789"
     assert result["pop_start"] == "03/01/2024"
     assert result["pop_end_date"] == "06/30/2025"
     assert result["contract_end_date"] == "06/30/2026"
+    assert (
+        result["competition"] == "5 offers received. Small business set aside - total."
+    )
 
 
 def test_extract_contract_details_fallback_to_awardee_name():
@@ -168,7 +268,7 @@ def test_extract_contract_details_fallback_to_awardee_name():
         },
     }
 
-    result = search.extract_contract_details(award_summary)
+    result = search.extract_contract_details(award_summary, "02/24/2024")
 
     assert result["company"] == "Test Company"
     assert result["unique_entity_id"] == ""
@@ -176,6 +276,39 @@ def test_extract_contract_details_fallback_to_awardee_name():
     assert result["pop_start"] == ""
     assert result["pop_end_date"] == ""
     assert result["contract_end_date"] == ""
+    assert result["competition"] == ""
+
+
+def test_extract_contract_details_omits_competition_for_existing_award():
+    award_summary = {
+        "contract_id": {"reason_for_modification": {}},
+        "award_details": {
+            "dates": {
+                "date_signed": "2026-09-25T00:00:00Z",
+                "period_of_performance_start_date": "2024-03-01 00:00:00.000",
+            },
+            "dollars": {},
+            "total_contract_dollars": {},
+            "awardee_data": {
+                "awardee_header": {"awardee_name": "Test Company"},
+                "awardee_location": {},
+            },
+            "product_or_service_information": {},
+            "competition_information": {"number_of_offers_received": "5"},
+        },
+        "core_data": {
+            "competition_information": {
+                "extent_competed": {"name": "FULL AND OPEN COMPETITION"},
+                "type_of_set_aside": {"name": "SMALL BUSINESS SET ASIDE - TOTAL"},
+            },
+        },
+    }
+
+    # Period of performance started well before the evaluated date, so this is
+    # an update to an existing award and competition details are omitted.
+    result = search.extract_contract_details(award_summary, "09/24/2026")
+
+    assert result["competition"] == ""
 
 
 def test_extract_contract_details_empty_obligation():
@@ -193,7 +326,7 @@ def test_extract_contract_details_empty_obligation():
         },
     }
 
-    result = search.extract_contract_details(award_summary)
+    result = search.extract_contract_details(award_summary, "02/24/2024")
 
     assert result["obligation"] == ""
     assert result["total_obligated"] == ""

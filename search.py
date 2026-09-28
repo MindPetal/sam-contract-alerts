@@ -76,6 +76,42 @@ def build_textblock(content: str) -> dict:
     return {"type": "TextBlock", "text": content, "wrap": True}
 
 
+def format_competition(
+    number_of_offers: str,
+    extent_competed: str,
+    type_of_set_aside: str,
+) -> str:
+    """
+    Build the competition summary sentence.
+    """
+    parts = []
+
+    if number_of_offers:
+        try:
+            count = int(number_of_offers)
+        except (TypeError, ValueError):
+            count = None
+        if count is not None:
+            noun = "offer" if count == 1 else "offers"
+            parts.append(f"{count} {noun} received.")
+
+    extent_clean = extent_competed.strip().rstrip(".").strip()
+    set_aside_clean = type_of_set_aside.strip().rstrip(".").strip()
+
+    # Only surface the extent of competition when it is "NOT COMPETED";
+    descriptors = []
+    if extent_clean.upper() == "NOT COMPETED":
+        descriptors.append(extent_clean)
+    if set_aside_clean:
+        descriptors.append(set_aside_clean)
+
+    if descriptors:
+        sentence = ", ".join(descriptors).capitalize()
+        parts.append(f"{sentence}.")
+
+    return " ".join(parts)
+
+
 def build_row(content: str, stripe_index: int) -> dict:
     """
     Build a striped single-cell TableRow
@@ -123,6 +159,9 @@ def build_detail_content(detail: dict) -> str:
         f"{desc}",
     ]
 
+    if detail.get("competition"):
+        fields.append(f"{detail['competition']}")
+
     return " | ".join(fields)
 
 
@@ -151,7 +190,7 @@ def build_details_table(heading: str, details: list[dict]) -> dict:
     }
 
 
-def extract_contract_details(award_summary: dict) -> dict:
+def extract_contract_details(award_summary: dict, yday: str) -> dict:
     """
     Extract contract details from award summary
     """
@@ -172,7 +211,8 @@ def extract_contract_details(award_summary: dict) -> dict:
     contract_info["unique_entity_id"] = awardee_uei.get("unique_entity_id", "")
 
     reason = award_summary.get("contract_id", {}).get("reason_for_modification") or {}
-    contract_info["reason"] = reason.get("name", "")
+    reason_name = reason.get("name", "")
+    contract_info["reason"] = reason_name.strip().capitalize() if reason_name else ""
 
     obligation = award_details.get("dollars", {}).get("action_obligation", "")
     contract_info["obligation"] = f"${float(obligation):,.12g}" if obligation else ""
@@ -191,6 +231,7 @@ def extract_contract_details(award_summary: dict) -> dict:
         parsed_pop_start = datetime.strptime(pop_start[:10], "%Y-%m-%d")
         contract_info["pop_start"] = parsed_pop_start.strftime("%m/%d/%Y")
     else:
+        parsed_pop_start = None
         contract_info["pop_start"] = ""
 
     product_service = award_details.get("product_or_service_information", {})
@@ -213,6 +254,28 @@ def extract_contract_details(award_summary: dict) -> dict:
         contract_info["contract_end_date"] = parsed_end.strftime("%m/%d/%Y")
     else:
         contract_info["contract_end_date"] = ""
+
+    award_competition = award_details.get("competition_information", {}) or {}
+    core_competition = (award_summary.get("core_data", {}) or {}).get(
+        "competition_information", {}
+    ) or {}
+
+    number_of_offers = award_competition.get("number_of_offers_received", "")
+    extent_competed = (core_competition.get("extent_competed", {}) or {}).get(
+        "name", ""
+    )
+    type_of_set_aside = (core_competition.get("type_of_set_aside", {}) or {}).get(
+        "name", ""
+    )
+
+    # Only surface competition details for new awards.
+    yday_date = datetime.strptime(yday, "%m/%d/%Y")
+    if parsed_pop_start is not None and parsed_pop_start < yday_date:
+        contract_info["competition"] = ""
+    else:
+        contract_info["competition"] = format_competition(
+            number_of_offers, extent_competed, type_of_set_aside
+        )
 
     return contract_info
 
@@ -290,7 +353,7 @@ def search_contracts(
             parent_updates = search(api_client, sam_api_key, yday, criteria)
 
             for update in parent_updates:
-                contract_info = extract_contract_details(update)
+                contract_info = extract_contract_details(update, yday)
                 contract_details.append(contract_info)
 
             log.info("Searching for child award updates under IDV..")
@@ -298,7 +361,7 @@ def search_contracts(
             child_updates = search(api_client, sam_api_key, yday, criteria)
 
             for update in child_updates:
-                contract_info = extract_contract_details(update)
+                contract_info = extract_contract_details(update, yday)
                 contract_details.append(contract_info)
 
         elif contract_type == "AWARD":
@@ -308,7 +371,7 @@ def search_contracts(
             award_updates = search(api_client, sam_api_key, yday, criteria)
 
             for update in award_updates:
-                contract_info = extract_contract_details(update)
+                contract_info = extract_contract_details(update, yday)
                 contract_details.append(contract_info)
 
         if contract_details:
@@ -351,7 +414,7 @@ def search_naics(
             contract_details = []
 
             for update in contract_updates:
-                contract_info = extract_contract_details(update)
+                contract_info = extract_contract_details(update, yday)
                 contract_details.append(contract_info)
 
             results.append(

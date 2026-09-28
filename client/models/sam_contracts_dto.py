@@ -798,6 +798,230 @@ class ProductOrServiceInformation(object):
         return not self == other
 
 
+class ExtentCompeted(object):
+    """Extent to which a contract was competed"""
+
+    types = {"name": "str"}
+    attribute_map = {"name": "name"}
+
+    def __init__(self, name=None):
+        self._name = None
+        self.discriminator = None
+        if name is not None:
+            self.name = name
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        self._name = name
+
+    def to_dict(self):
+        result = {}
+        for attr, _ in six.iteritems(self.types):
+            value = getattr(self, attr)
+            if isinstance(value, list):
+                result[attr] = list(
+                    map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value)
+                )
+            elif hasattr(value, "to_dict"):
+                result[attr] = value.to_dict()
+            elif isinstance(value, dict):
+                result[attr] = dict(
+                    map(
+                        lambda item: (
+                            (item[0], item[1].to_dict())
+                            if hasattr(item[1], "to_dict")
+                            else item
+                        ),
+                        value.items(),
+                    )
+                )
+            else:
+                result[attr] = value
+        if issubclass(ExtentCompeted, dict):
+            for key, value in self.items():
+                result[key] = value
+        return result
+
+    def to_str(self):
+        return pprint.pformat(self.to_dict())
+
+    def __repr__(self):
+        return self.to_str()
+
+    def __eq__(self, other):
+        if not isinstance(other, ExtentCompeted):
+            return False
+        return self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not self == other
+
+
+class TypeOfSetAside(object):
+    """Type of set-aside used for a contract"""
+
+    types = {"name": "str"}
+    attribute_map = {"name": "name"}
+
+    def __init__(self, name=None):
+        self._name = None
+        self.discriminator = None
+        if name is not None:
+            self.name = name
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        self._name = name
+
+    def to_dict(self):
+        result = {}
+        for attr, _ in six.iteritems(self.types):
+            value = getattr(self, attr)
+            if isinstance(value, list):
+                result[attr] = list(
+                    map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value)
+                )
+            elif hasattr(value, "to_dict"):
+                result[attr] = value.to_dict()
+            elif isinstance(value, dict):
+                result[attr] = dict(
+                    map(
+                        lambda item: (
+                            (item[0], item[1].to_dict())
+                            if hasattr(item[1], "to_dict")
+                            else item
+                        ),
+                        value.items(),
+                    )
+                )
+            else:
+                result[attr] = value
+        if issubclass(TypeOfSetAside, dict):
+            for key, value in self.items():
+                result[key] = value
+        return result
+
+    def to_str(self):
+        return pprint.pformat(self.to_dict())
+
+    def __repr__(self):
+        return self.to_str()
+
+    def __eq__(self, other):
+        if not isinstance(other, TypeOfSetAside):
+            return False
+        return self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not self == other
+
+
+class CompetitionInformation(object):
+    """Competition information for a contract"""
+
+    types = {
+        "extent_competed": "ExtentCompeted",
+        "type_of_set_aside": "TypeOfSetAside",
+        "number_of_offers_received": "str",
+    }
+    attribute_map = {
+        "extent_competed": "extentCompeted",
+        "type_of_set_aside": "typeOfSetAside",
+        "number_of_offers_received": "numberOfOffersReceived",
+    }
+
+    def __init__(
+        self,
+        extent_competed=None,
+        type_of_set_aside=None,
+        number_of_offers_received=None,
+    ):
+        self._extent_competed = None
+        self._type_of_set_aside = None
+        self._number_of_offers_received = None
+        self.discriminator = None
+        if extent_competed is not None:
+            self.extent_competed = extent_competed
+        if type_of_set_aside is not None:
+            self.type_of_set_aside = type_of_set_aside
+        if number_of_offers_received is not None:
+            self.number_of_offers_received = number_of_offers_received
+
+    @property
+    def extent_competed(self):
+        return self._extent_competed
+
+    @extent_competed.setter
+    def extent_competed(self, extent_competed):
+        self._extent_competed = extent_competed
+
+    @property
+    def type_of_set_aside(self):
+        return self._type_of_set_aside
+
+    @type_of_set_aside.setter
+    def type_of_set_aside(self, type_of_set_aside):
+        self._type_of_set_aside = type_of_set_aside
+
+    @property
+    def number_of_offers_received(self):
+        return self._number_of_offers_received
+
+    @number_of_offers_received.setter
+    def number_of_offers_received(self, number_of_offers_received):
+        self._number_of_offers_received = number_of_offers_received
+
+    def to_dict(self):
+        result = {}
+        for attr, _ in six.iteritems(self.types):
+            value = getattr(self, attr)
+            if isinstance(value, list):
+                result[attr] = list(
+                    map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value)
+                )
+            elif hasattr(value, "to_dict"):
+                result[attr] = value.to_dict()
+            elif isinstance(value, dict):
+                result[attr] = dict(
+                    map(
+                        lambda item: (
+                            (item[0], item[1].to_dict())
+                            if hasattr(item[1], "to_dict")
+                            else item
+                        ),
+                        value.items(),
+                    )
+                )
+            else:
+                result[attr] = value
+        if issubclass(CompetitionInformation, dict):
+            for key, value in self.items():
+                result[key] = value
+        return result
+
+    def to_str(self):
+        return pprint.pformat(self.to_dict())
+
+    def __repr__(self):
+        return self.to_str()
+
+    def __eq__(self, other):
+        if not isinstance(other, CompetitionInformation):
+            return False
+        return self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not self == other
+
+
 class AwardDetails(object):
     """Award details"""
 
@@ -807,6 +1031,7 @@ class AwardDetails(object):
         "total_contract_dollars": "TotalContractDollars",
         "awardee_data": "AwardeeData",
         "product_or_service_information": "ProductOrServiceInformation",
+        "competition_information": "CompetitionInformation",
     }
     attribute_map = {
         "dates": "dates",
@@ -814,6 +1039,7 @@ class AwardDetails(object):
         "total_contract_dollars": "totalContractDollars",
         "awardee_data": "awardeeData",
         "product_or_service_information": "productOrServiceInformation",
+        "competition_information": "competitionInformation",
     }
 
     def __init__(
@@ -823,12 +1049,14 @@ class AwardDetails(object):
         total_contract_dollars=None,
         awardee_data=None,
         product_or_service_information=None,
+        competition_information=None,
     ):
         self._dates = None
         self._dollars = None
         self._total_contract_dollars = None
         self._awardee_data = None
         self._product_or_service_information = None
+        self._competition_information = None
         self.discriminator = None
         if dates is not None:
             self.dates = dates
@@ -840,6 +1068,8 @@ class AwardDetails(object):
             self.awardee_data = awardee_data
         if product_or_service_information is not None:
             self.product_or_service_information = product_or_service_information
+        if competition_information is not None:
+            self.competition_information = competition_information
 
     @property
     def dates(self):
@@ -880,6 +1110,14 @@ class AwardDetails(object):
     @product_or_service_information.setter
     def product_or_service_information(self, product_or_service_information):
         self._product_or_service_information = product_or_service_information
+
+    @property
+    def competition_information(self):
+        return self._competition_information
+
+    @competition_information.setter
+    def competition_information(self, competition_information):
+        self._competition_information = competition_information
 
     def to_dict(self):
         result = {}
@@ -924,26 +1162,94 @@ class AwardDetails(object):
         return not self == other
 
 
+class CoreData(object):
+    """Core contract data"""
+
+    types = {"competition_information": "CompetitionInformation"}
+    attribute_map = {"competition_information": "competitionInformation"}
+
+    def __init__(self, competition_information=None):
+        self._competition_information = None
+        self.discriminator = None
+        if competition_information is not None:
+            self.competition_information = competition_information
+
+    @property
+    def competition_information(self):
+        return self._competition_information
+
+    @competition_information.setter
+    def competition_information(self, competition_information):
+        self._competition_information = competition_information
+
+    def to_dict(self):
+        result = {}
+        for attr, _ in six.iteritems(self.types):
+            value = getattr(self, attr)
+            if isinstance(value, list):
+                result[attr] = list(
+                    map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value)
+                )
+            elif hasattr(value, "to_dict"):
+                result[attr] = value.to_dict()
+            elif isinstance(value, dict):
+                result[attr] = dict(
+                    map(
+                        lambda item: (
+                            (item[0], item[1].to_dict())
+                            if hasattr(item[1], "to_dict")
+                            else item
+                        ),
+                        value.items(),
+                    )
+                )
+            else:
+                result[attr] = value
+        if issubclass(CoreData, dict):
+            for key, value in self.items():
+                result[key] = value
+        return result
+
+    def to_str(self):
+        return pprint.pformat(self.to_dict())
+
+    def __repr__(self):
+        return self.to_str()
+
+    def __eq__(self, other):
+        if not isinstance(other, CoreData):
+            return False
+        return self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not self == other
+
+
 class AwardSummary(object):
     """Award summary"""
 
     types = {
         "contract_id": "ContractId",
         "award_details": "AwardDetails",
+        "core_data": "CoreData",
     }
     attribute_map = {
         "contract_id": "contractId",
         "award_details": "awardDetails",
+        "core_data": "coreData",
     }
 
-    def __init__(self, contract_id=None, award_details=None):
+    def __init__(self, contract_id=None, award_details=None, core_data=None):
         self._contract_id = None
         self._award_details = None
+        self._core_data = None
         self.discriminator = None
         if contract_id is not None:
             self.contract_id = contract_id
         if award_details is not None:
             self.award_details = award_details
+        if core_data is not None:
+            self.core_data = core_data
 
     @property
     def contract_id(self):
@@ -960,6 +1266,14 @@ class AwardSummary(object):
     @award_details.setter
     def award_details(self, award_details):
         self._award_details = award_details
+
+    @property
+    def core_data(self):
+        return self._core_data
+
+    @core_data.setter
+    def core_data(self, core_data):
+        self._core_data = core_data
 
     def to_dict(self):
         result = {}
