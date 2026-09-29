@@ -76,6 +76,19 @@ def build_textblock(content: str) -> dict:
     return {"type": "TextBlock", "text": content, "wrap": True}
 
 
+def format_award_type(award_type: str) -> str:
+    """
+    Lowercase an all-caps award type.
+    """
+    words = []
+    for word in award_type.split():
+        if len(word) <= 3:
+            words.append(word.upper())
+        else:
+            words.append(word.lower())
+    return " ".join(words)
+
+
 def format_competition(
     number_of_offers: str,
     extent_competed: str,
@@ -144,13 +157,7 @@ def build_detail_content(detail: dict) -> str:
         f"{company_text}",
         f"{detail['date']}",
         f"[{detail['piid']}]({contract_url})",
-    ]
-
-    if detail["reason"]:
-        fields.append(f"{detail['reason']}")
-
-    fields += [
-        f"{detail['obligation']}",
+        f"{detail['action']}",
         f"**To Date:** {detail['total_obligated']}",
         f"**TCV:** {detail['total_value']}",
         f"**Start:** {detail['pop_start']}",
@@ -215,7 +222,22 @@ def extract_contract_details(award_summary: dict, yday: str) -> dict:
     contract_info["reason"] = reason_name.strip().capitalize() if reason_name else ""
 
     obligation = award_details.get("dollars", {}).get("action_obligation", "")
-    contract_info["obligation"] = f"${float(obligation):,.12g}" if obligation else ""
+    if obligation != "" and obligation is not None:
+        contract_info["obligation"] = f"${float(obligation):,.12g}"
+    else:
+        contract_info["obligation"] = ""
+
+    core_data = award_summary.get("core_data", {}) or {}
+    award_type = (core_data.get("award_or_idv_type", {}) or {}).get("name", "")
+    award_type = format_award_type(award_type) if award_type else ""
+
+    obligation_part = " ".join(
+        part for part in [contract_info["obligation"], award_type] if part
+    )
+    if contract_info["reason"]:
+        contract_info["action"] = f"{contract_info['reason']} - {obligation_part}"
+    else:
+        contract_info["action"] = obligation_part
 
     total_dollars = award_details.get("total_contract_dollars", {})
     total_obligated = total_dollars.get("total_base_and_exercised_options_value", "")
@@ -256,9 +278,7 @@ def extract_contract_details(award_summary: dict, yday: str) -> dict:
         contract_info["contract_end_date"] = ""
 
     award_competition = award_details.get("competition_information", {}) or {}
-    core_competition = (award_summary.get("core_data", {}) or {}).get(
-        "competition_information", {}
-    ) or {}
+    core_competition = core_data.get("competition_information", {}) or {}
 
     number_of_offers = award_competition.get("number_of_offers_received", "")
     extent_competed = (core_competition.get("extent_competed", {}) or {}).get(
