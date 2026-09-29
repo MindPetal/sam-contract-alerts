@@ -3,6 +3,7 @@ from __future__ import absolute_import
 # Import SAM contract models from combined file
 from client.models.sam_contracts_dto import (
     AwardDetails,
+    AwardOrIDVType,
     AwardResponse,
     AwardSummary,
     AwardeeData,

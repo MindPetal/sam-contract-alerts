@@ -148,8 +148,7 @@ def test_build_detail_content_appends_competition_last():
     detail = {
         "date": "Feb 25, 2024",
         "company": "Test Company",
-        "reason": "Exercise An Option",
-        "obligation": "$50,000",
+        "action": "Exercise an option - $50,000 delivery order",
         "total_obligated": "$86,974,480.71",
         "total_value": "$170,000,000",
         "desc": "Test description",
@@ -173,8 +172,7 @@ def test_build_detail_content_omits_blank_competition():
     detail = {
         "date": "Feb 25, 2024",
         "company": "Test Company",
-        "reason": "",
-        "obligation": "$50,000",
+        "action": "$50,000 delivery order",
         "total_obligated": "$86,974,480.71",
         "total_value": "$170,000,000",
         "desc": "Test description",
@@ -188,6 +186,12 @@ def test_build_detail_content_omits_blank_competition():
     row_text = search.build_detail_content(detail)
 
     assert row_text.endswith("Test description")
+
+
+def test_format_award_type():
+    assert search.format_award_type("DELIVERY ORDER") == "delivery order"
+    assert search.format_award_type("BPA CALL") == "BPA call"
+    assert search.format_award_type("") == ""
 
 
 def test_extract_contract_details():
@@ -227,6 +231,7 @@ def test_extract_contract_details():
             },
         },
         "core_data": {
+            "award_or_idv_type": {"name": "DELIVERY ORDER"},
             "competition_information": {
                 "extent_competed": {"name": "FULL AND OPEN COMPETITION"},
                 "type_of_set_aside": {"name": "SMALL BUSINESS SET ASIDE - TOTAL"},
@@ -243,6 +248,7 @@ def test_extract_contract_details():
     assert result["total_obligated"] == "$86,974,480.71"
     assert result["total_value"] == "$170,000,000"
     assert result["reason"] == "Exercise an option"
+    assert result["action"] == "Exercise an option - $50,000 delivery order"
     assert result["desc"] == "Test description\nwith newline"
     assert result["piid"] == "123456789"
     assert result["pop_start"] == "03/01/2024"
@@ -329,6 +335,7 @@ def test_extract_contract_details_empty_obligation():
     result = search.extract_contract_details(award_summary, "02/24/2024")
 
     assert result["obligation"] == ""
+    assert result["action"] == ""
     assert result["total_obligated"] == ""
     assert result["pop_start"] == ""
     assert result["pop_end_date"] == ""
@@ -345,8 +352,7 @@ def test_format_results_with_contract_no():
                 {
                     "date": "Feb 25, 2024",
                     "company": "Test Company",
-                    "reason": "Exercise An Option",
-                    "obligation": "$50,000",
+                    "action": "Exercise an option - $50,000 delivery order",
                     "total_obligated": "$86,974,480.71",
                     "total_value": "$170,000,000",
                     "desc": "Test description",
@@ -389,8 +395,7 @@ def test_format_results_with_contract_no():
     )
     # company name appears before contract no
     assert row_text.index("Test Company") < row_text.index("[123456789]")
-    assert "Exercise An Option" in row_text
-    assert "$50,000" in row_text
+    assert "Exercise an option - $50,000 delivery order" in row_text
     assert "**To Date:** $86,974,480.71" in row_text
     assert "**TCV:** $170,000,000" in row_text
     assert "**Start:** Mar 01, 2024" in row_text
@@ -409,8 +414,7 @@ def test_format_results_with_naics():
                 {
                     "date": "Feb 25, 2024",
                     "company": "Test Company",
-                    "reason": "Exercise An Option",
-                    "obligation": "$50,000",
+                    "action": "Exercise an option - $50,000 delivery order",
                     "total_obligated": "$86,974,480.71",
                     "total_value": "$170,000,000",
                     "desc": "Test description",
@@ -451,8 +455,7 @@ def test_format_results_multiple_details_single_table():
     detail = {
         "date": "Feb 25, 2024",
         "company": "Test Company",
-        "reason": "Exercise An Option",
-        "obligation": "$50,000",
+        "action": "Exercise an option - $50,000 delivery order",
         "total_obligated": "$86,974,480.71",
         "total_value": "$170,000,000",
         "desc": "Test description",
@@ -499,8 +502,7 @@ def test_format_results_blank_reason_omitted():
                 {
                     "date": "Feb 25, 2024",
                     "company": "Test Company",
-                    "reason": "",
-                    "obligation": "$50,000",
+                    "action": "$50,000 delivery order",
                     "total_obligated": "$86,974,480.71",
                     "total_value": "$170,000,000",
                     "desc": "Test description",

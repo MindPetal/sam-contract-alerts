@@ -14,6 +14,7 @@ from client.configuration import Configuration as Configuration
 from client.models.ms_channel_dto import MsChannelDto as MsChannelDto
 from client.models.sam_contracts_dto import (
     AwardDetails as AwardDetails,
+    AwardOrIDVType as AwardOrIDVType,
     AwardResponse as AwardResponse,
     AwardSummary as AwardSummary,
     AwardeeData as AwardeeData,

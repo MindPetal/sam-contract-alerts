@@ -1162,17 +1162,97 @@ class AwardDetails(object):
         return not self == other
 
 
+class AwardOrIDVType(object):
+    """Award or IDV type"""
+
+    types = {"name": "str"}
+    attribute_map = {"name": "name"}
+
+    def __init__(self, name=None):
+        self._name = None
+        self.discriminator = None
+        if name is not None:
+            self.name = name
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        self._name = name
+
+    def to_dict(self):
+        result = {}
+        for attr, _ in six.iteritems(self.types):
+            value = getattr(self, attr)
+            if isinstance(value, list):
+                result[attr] = list(
+                    map(lambda x: x.to_dict() if hasattr(x, "to_dict") else x, value)
+                )
+            elif hasattr(value, "to_dict"):
+                result[attr] = value.to_dict()
+            elif isinstance(value, dict):
+                result[attr] = dict(
+                    map(
+                        lambda item: (
+                            (item[0], item[1].to_dict())
+                            if hasattr(item[1], "to_dict")
+                            else item
+                        ),
+                        value.items(),
+                    )
+                )
+            else:
+                result[attr] = value
+        if issubclass(AwardOrIDVType, dict):
+            for key, value in self.items():
+                result[key] = value
+        return result
+
+    def to_str(self):
+        return pprint.pformat(self.to_dict())
+
+    def __repr__(self):
+        return self.to_str()
+
+    def __eq__(self, other):
+        if not isinstance(other, AwardOrIDVType):
+            return False
+        return self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not self == other
+
+
 class CoreData(object):
     """Core contract data"""
 
-    types = {"competition_information": "CompetitionInformation"}
-    attribute_map = {"competition_information": "competitionInformation"}
+    types = {
+        "award_or_idv_type": "AwardOrIDVType",
+        "competition_information": "CompetitionInformation",
+    }
+    attribute_map = {
+        "award_or_idv_type": "awardOrIDVType",
+        "competition_information": "competitionInformation",
+    }
 
-    def __init__(self, competition_information=None):
+    def __init__(self, award_or_idv_type=None, competition_information=None):
+        self._award_or_idv_type = None
         self._competition_information = None
         self.discriminator = None
+        if award_or_idv_type is not None:
+            self.award_or_idv_type = award_or_idv_type
         if competition_information is not None:
             self.competition_information = competition_information
+
+    @property
+    def award_or_idv_type(self):
+        return self._award_or_idv_type
+
+    @award_or_idv_type.setter
+    def award_or_idv_type(self, award_or_idv_type):
+        self._award_or_idv_type = award_or_idv_type
 
     @property
     def competition_information(self):
