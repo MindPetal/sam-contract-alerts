@@ -206,7 +206,7 @@ def extract_contract_details(award_summary: dict, yday: str) -> dict:
     award_details = award_summary.get("award_details", {})
 
     dates = award_details.get("dates", {})
-    date_signed = dates.get("date_signed", "").split("T")[0]
+    date_signed = dates.get("date_signed", "")[:10]
     parsed_date = datetime.strptime(date_signed, "%Y-%m-%d")
     contract_info["date"] = parsed_date.strftime("%m/%d/%Y")
 
@@ -235,7 +235,7 @@ def extract_contract_details(award_summary: dict, yday: str) -> dict:
         part for part in [contract_info["obligation"], award_type] if part
     )
     if contract_info["reason"]:
-        contract_info["action"] = f"{contract_info['reason']} - {obligation_part}"
+        contract_info["action"] = f"{contract_info['reason']}: {obligation_part}"
     else:
         contract_info["action"] = obligation_part
 

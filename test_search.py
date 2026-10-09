@@ -148,7 +148,7 @@ def test_build_detail_content_appends_competition_last():
     detail = {
         "date": "Feb 25, 2024",
         "company": "Test Company",
-        "action": "Exercise an option - $50,000 delivery order",
+        "action": "Exercise an option: $50,000 delivery order",
         "total_obligated": "$86,974,480.71",
         "total_value": "$170,000,000",
         "desc": "Test description",
@@ -248,7 +248,7 @@ def test_extract_contract_details():
     assert result["total_obligated"] == "$86,974,480.71"
     assert result["total_value"] == "$170,000,000"
     assert result["reason"] == "Exercise an option"
-    assert result["action"] == "Exercise an option - $50,000 delivery order"
+    assert result["action"] == "Exercise an option: $50,000 delivery order"
     assert result["desc"] == "Test description\nwith newline"
     assert result["piid"] == "123456789"
     assert result["pop_start"] == "03/01/2024"
@@ -257,6 +257,27 @@ def test_extract_contract_details():
     assert (
         result["competition"] == "5 offers received. Small business set aside - total."
     )
+
+
+def test_extract_contract_details_space_separated_date_signed():
+
+    award_summary = {
+        "contract_id": {"reason_for_modification": {}},
+        "award_details": {
+            "dates": {"date_signed": "2026-09-30 00:00:00"},
+            "dollars": {},
+            "total_contract_dollars": {},
+            "awardee_data": {
+                "awardee_header": {"awardee_name": "Test Company"},
+                "awardee_location": {},
+            },
+            "product_or_service_information": {},
+        },
+    }
+
+    result = search.extract_contract_details(award_summary, "09/30/2026")
+
+    assert result["date"] == "09/30/2026"
 
 
 def test_extract_contract_details_fallback_to_awardee_name():
@@ -352,7 +373,7 @@ def test_format_results_with_contract_no():
                 {
                     "date": "Feb 25, 2024",
                     "company": "Test Company",
-                    "action": "Exercise an option - $50,000 delivery order",
+                    "action": "Exercise an option: $50,000 delivery order",
                     "total_obligated": "$86,974,480.71",
                     "total_value": "$170,000,000",
                     "desc": "Test description",
@@ -395,7 +416,7 @@ def test_format_results_with_contract_no():
     )
     # company name appears before contract no
     assert row_text.index("Test Company") < row_text.index("[123456789]")
-    assert "Exercise an option - $50,000 delivery order" in row_text
+    assert "Exercise an option: $50,000 delivery order" in row_text
     assert "**To Date:** $86,974,480.71" in row_text
     assert "**TCV:** $170,000,000" in row_text
     assert "**Start:** Mar 01, 2024" in row_text
@@ -414,7 +435,7 @@ def test_format_results_with_naics():
                 {
                     "date": "Feb 25, 2024",
                     "company": "Test Company",
-                    "action": "Exercise an option - $50,000 delivery order",
+                    "action": "Exercise an option: $50,000 delivery order",
                     "total_obligated": "$86,974,480.71",
                     "total_value": "$170,000,000",
                     "desc": "Test description",
@@ -455,7 +476,7 @@ def test_format_results_multiple_details_single_table():
     detail = {
         "date": "Feb 25, 2024",
         "company": "Test Company",
-        "action": "Exercise an option - $50,000 delivery order",
+        "action": "Exercise an option: $50,000 delivery order",
         "total_obligated": "$86,974,480.71",
         "total_value": "$170,000,000",
         "desc": "Test description",
