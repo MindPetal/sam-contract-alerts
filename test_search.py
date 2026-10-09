@@ -148,7 +148,7 @@ def test_build_detail_content_appends_competition_last():
     detail = {
         "date": "Feb 25, 2024",
         "company": "Test Company",
-        "action": "Exercise an option - $50,000 delivery order",
+        "action": "Exercise an option: $50,000 delivery order",
         "total_obligated": "$86,974,480.71",
         "total_value": "$170,000,000",
         "desc": "Test description",
@@ -248,7 +248,7 @@ def test_extract_contract_details():
     assert result["total_obligated"] == "$86,974,480.71"
     assert result["total_value"] == "$170,000,000"
     assert result["reason"] == "Exercise an option"
-    assert result["action"] == "Exercise an option - $50,000 delivery order"
+    assert result["action"] == "Exercise an option: $50,000 delivery order"
     assert result["desc"] == "Test description\nwith newline"
     assert result["piid"] == "123456789"
     assert result["pop_start"] == "03/01/2024"
