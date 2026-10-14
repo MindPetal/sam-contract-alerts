@@ -449,10 +449,14 @@ def search_naics(
 
 
 def process_search(
-    api_client: client.ApiClient, sam_api_key: str, contract_list: str, naics_list: str
+    api_client: client.ApiClient,
+    sam_api_key: str,
+    contract_list: str,
+    naics_list: str,
+    days: int = 1,
 ) -> list:
     """Prepare sam.gov search and format results."""
-    yday = (datetime.now() - timedelta(days=1)).strftime("%m/%d/%Y")
+    yday = (datetime.now() - timedelta(days=days)).strftime("%m/%d/%Y")
     log.info("Searching for date: %s", yday)
 
     contract_results = search_contracts(api_client, sam_api_key, contract_list, yday)
@@ -521,7 +525,11 @@ def teams_post(api_client: client.ApiClient, items: list[dict]) -> None:
 
 
 def main(
-    sam_api_key: str, contract_list: str, naics_list: str, ms_webhook_url: str
+    sam_api_key: str,
+    contract_list: str,
+    naics_list: str,
+    ms_webhook_url: str,
+    days: int = 1,
 ) -> None:
     """
     Primary processing function
@@ -533,7 +541,7 @@ def main(
 
     log.info("Process search")
     contract_results = process_search(
-        api_client, sam_api_key, contract_list, naics_list
+        api_client, sam_api_key, contract_list, naics_list, days
     )
 
     if contract_results:
@@ -553,4 +561,5 @@ if __name__ == "__main__":
         os.environ["CONTRACT_LIST"],
         os.environ["NAICS_LIST"],
         os.environ["MS_URL"],
+        int(os.environ.get("DAYS", "1")),
     )
