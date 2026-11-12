@@ -313,9 +313,8 @@ def format_results(raw_results: list[dict]) -> list:
         for result in raw_results:
             if "contract_no" in result:
                 heading = f"**{result['contract_nm']}** - {result['contract_no']}:"
-            elif "naics" in result:
-                agency = result["agency"]
-                heading = f"**{agency}** - NAICS {result['naics']} updates:"
+            elif "agency" in result:
+                heading = f"**{result['agency']}** updates:"
 
             items.append(build_details_table(heading, result["contract_details"]))
             items.append(build_textblock(""))
@@ -406,40 +405,48 @@ def search_contracts(
     return results
 
 
+def parse_naics_list(naics_list: str) -> list[tuple[str, str, list[str]]]:
+    """
+    Parse 'AGENCY NAME:ABBR:[NAICS-NAICS],...' into (agency, abbr, naics codes)
+    """
+    entries = []
+
+    for entry in naics_list.split(","):
+        agency, abbr, codes = entry.rsplit(":", 2)
+        codes = codes.strip().removeprefix("[").removesuffix("]")
+        naics_codes = [code.strip() for code in codes.split("-") if code.strip()]
+        entries.append((agency.strip(), abbr.strip(), naics_codes))
+
+    return entries
+
+
 def search_naics(
     api_client: client.ApiClient,
     sam_api_key: str,
     naics_list: str,
     yday: str,
 ) -> list:
-    """Process NAICS searches and return results."""
+    """Process NAICS searches and return results grouped by agency."""
     results = []
 
     if not naics_list:
         return results
 
-    naics_triplets = naics_list.split(",")
+    for agency, abbr, naics_codes in parse_naics_list(naics_list):
+        contract_details = []
 
-    for triplet in naics_triplets:
-        log.info("Processing NAICS search")
-
-        naics, agency, abbr = triplet.split(":")
-        naics = naics.strip()
-        agency = agency.strip()
-        abbr = abbr.strip()
-        criteria = {"naics": naics, "agency": agency}
-        contract_updates = search(api_client, sam_api_key, yday, criteria)
-
-        if contract_updates:
-            contract_details = []
+        for naics in naics_codes:
+            log.info("Processing NAICS search")
+            criteria = {"naics": naics, "agency": agency}
+            contract_updates = search(api_client, sam_api_key, yday, criteria)
 
             for update in contract_updates:
                 contract_info = extract_contract_details(update, yday)
                 contract_details.append(contract_info)
 
+        if contract_details:
             results.append(
                 {
-                    "naics": naics,
                     "agency": abbr,
                     "contract_details": contract_details,
                 }

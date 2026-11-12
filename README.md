@@ -9,7 +9,7 @@ Python client to search government contract awards from SAM.gov API for the prio
 | ---- | ----- |
 |`SAM_API_KEY`| SAM.gov API key for Contract Awards API access, created and tied to your SAM profile |
 |`CONTRACT_LIST`| A comma separated string of contract numbers, contract names, and type (IDV or AWARD).<br> `123456789:My Contract:IDV,098765432:Your Contract:AWARD`<br>For IDV contracts (BPAs, IDIQs), the search will find both parent IDV updates and child awards. For AWARD contracts, only the specific award will be searched.|
-|`NAICS_LIST`| A comma separated string of NAICS, agency names and abbr.<br>`541512:THE AGENCY NAME:ABBR`<br>Use the full contracting subtier name (e.g., U.S. AGENCY OF SOMETHING). |
+|`NAICS_LIST`| A comma separated string of agency names, abbr, and a bracketed, dash separated list of NAICS codes.<br>`THE AGENCY NAME:ABBR:[541511-541512],OTHER AGENCY NAME:ABBR2:[541512]`<br>Use the full contracting subtier name (e.g., U.S. AGENCY OF SOMETHING). Each NAICS code is searched separately and results are combined into one table per agency. |
 | `MS_URL`| MS Teams webhook URL for your organization. More info on setting up Teams webhooks: [Create incoming webhooks with Workflows for Microsoft Teams](https://support.microsoft.com/en-us/office/create-incoming-webhooks-with-workflows-for-microsoft-teams-8ae491c7-0394-4861-ba59-055e33f75498)|
 
 ## Sample output:

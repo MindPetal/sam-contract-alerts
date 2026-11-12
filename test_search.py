@@ -429,7 +429,6 @@ def test_format_results_with_naics():
     raw_results = [
         {
             "index": 1,
-            "naics": "541512",
             "agency": "Test Agency",
             "contract_details": [
                 {
@@ -452,8 +451,8 @@ def test_format_results_with_naics():
 
     assert len(result) == 4
     heading_text = result[2]["rows"][0]["cells"][0]["items"][0]["text"]
-    assert "Test Agency" in heading_text
-    assert "541512" in heading_text
+    assert heading_text == "**Test Agency** updates:"
+    assert "NAICS" not in heading_text
     assert "1." not in heading_text
 
     table = result[2]
@@ -602,6 +601,17 @@ def test_search_contracts(mocker, api_client):
     assert len(results[0]["contract_details"]) == 1
 
 
+def test_parse_naics_list():
+    entries = search.parse_naics_list(
+        "Test Agency:TA:[541512-541511], Other Agency : OA : [ 541512 ]"
+    )
+
+    assert entries == [
+        ("Test Agency", "TA", ["541512", "541511"]),
+        ("Other Agency", "OA", ["541512"]),
+    ]
+
+
 def test_search_naics(mocker, api_client):
     award_summary_dict = {
         "contract_id": {
@@ -622,16 +632,31 @@ def test_search_naics(mocker, api_client):
         },
     }
 
-    mocker.patch("search.search", return_value=[award_summary_dict])
+    mock_search = mocker.patch("search.search", return_value=[award_summary_dict])
 
     results = search.search_naics(
-        api_client, "test-api-key", "541512:Test+Agency:TA", "02/24/2024"
+        api_client, "test-api-key", "Test+Agency:TA:[541512-541511]", "02/24/2024"
     )
 
+    # Each NAICS code is searched separately, results combined per agency
+    assert [c.args[3] for c in mock_search.call_args_list] == [
+        {"naics": "541512", "agency": "Test+Agency"},
+        {"naics": "541511", "agency": "Test+Agency"},
+    ]
     assert len(results) == 1
-    assert results[0]["naics"] == "541512"
+    assert "naics" not in results[0]
     assert results[0]["agency"] == "TA"
-    assert len(results[0]["contract_details"]) == 1
+    assert len(results[0]["contract_details"]) == 2
+
+
+def test_search_naics_omits_agency_without_updates(mocker, api_client):
+    mocker.patch("search.search", return_value=[])
+
+    results = search.search_naics(
+        api_client, "test-api-key", "Test+Agency:TA:[541512-541511]", "02/24/2024"
+    )
+
+    assert results == []
 
 
 def test_process_search_contract_no(mocker, api_client):
@@ -689,7 +714,7 @@ def test_process_search_naics(mocker, api_client):
     mocker.patch("search.search", return_value=[award_summary_dict])
 
     result = search.process_search(
-        api_client, "test-api-key", "", "541512:Test+Agency:TA"
+        api_client, "test-api-key", "", "Test+Agency:TA:[541512]"
     )
 
     assert len(result) > 0
@@ -797,7 +822,7 @@ def test_process_search_dedupes_piids(mocker, api_client):
         api_client,
         "test-api-key",
         "DUPLICATE123:Test Contract:AWARD",
-        "541512:Test Agency:TA",
+        "Test Agency:TA:[541512]",
     )
 
     # Associate each detail table with its header-row heading
@@ -811,7 +836,7 @@ def test_process_search_dedupes_piids(mocker, api_client):
             )
             sections.setdefault(heading, []).append(row_text)
 
-    naics_headings = [h for h in sections if h and "TA" in h and "NAICS" in h]
+    naics_headings = [h for h in sections if h == "**TA** updates:"]
     assert len(naics_headings) == 1
 
     naics_text = "\n".join(sections[naics_headings[0]])
