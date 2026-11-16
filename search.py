@@ -28,12 +28,18 @@ def search(
 
     try:
         if "contract_no" in criteria:
+            search_params = {}
+            if criteria.get("idv_no"):
+                # PIIDs are only unique within their parent IDV
+                search_params["referenced_idv_piid"] = criteria["idv_no"]
+
             api_response = api_instance.search(
                 api_key=api_key,
                 piid=criteria["contract_no"],
                 date_signed=yday,
                 limit=10,
                 offset=0,
+                **search_params,
             )
         elif "parent_contract_no" in criteria:
             # Search for child awards under an IDV
@@ -341,6 +347,32 @@ def build_entity_url(unique_entity_id: str) -> str:
     return f"https://sam.gov/entities/view/{unique_entity_id}/coreData?status=Active"
 
 
+def parse_contract_list(contract_list: str) -> list[tuple[str, str, str, str]]:
+    """
+    Parse 'NO:NAME:TYPE' or 'NO:IDV_NO:NAME:TYPE' entries into
+    (contract no, idv no, name, type). IDV no is "" when omitted.
+    """
+    entries = []
+
+    for entry in contract_list.split(","):
+        parts = [part.strip() for part in entry.split(":")]
+
+        if len(parts) == 4:
+            contract_no, idv_no, contract_nm, contract_type = parts
+        elif len(parts) == 3:
+            contract_no, contract_nm, contract_type = parts
+            idv_no = ""
+        else:
+            raise ValueError(
+                f"Invalid contract entry '{entry}': expected "
+                "NO:NAME:TYPE or NO:IDV_NO:NAME:TYPE"
+            )
+
+        entries.append((contract_no, idv_no, contract_nm, contract_type))
+
+    return entries
+
+
 def search_contracts(
     api_client: client.ApiClient,
     sam_api_key: str,
@@ -353,22 +385,17 @@ def search_contracts(
     if not contract_list:
         return results
 
-    contract_triplets = contract_list.split(",")
-
-    for triplet in contract_triplets:
+    for contract_no, idv_no, contract_nm, contract_type in parse_contract_list(
+        contract_list
+    ):
         log.info("Processing contract number search")
-
-        contract_no, contract_nm, contract_type = triplet.split(":")
-        contract_no = contract_no.strip()
-        contract_nm = contract_nm.strip()
-        contract_type = contract_type.strip()
 
         contract_details = []
 
         if contract_type == "IDV":
             # Make API calls for parent and child awards
             log.info("Searching for IDV parent contract updates..")
-            criteria = {"contract_no": contract_no}
+            criteria = {"contract_no": contract_no, "idv_no": idv_no}
             parent_updates = search(api_client, sam_api_key, yday, criteria)
 
             for update in parent_updates:
@@ -386,7 +413,7 @@ def search_contracts(
         elif contract_type == "AWARD":
             # Single award search
             log.info("Searching for contract updates..")
-            criteria = {"contract_no": contract_no}
+            criteria = {"contract_no": contract_no, "idv_no": idv_no}
             award_updates = search(api_client, sam_api_key, yday, criteria)
 
             for update in award_updates:
@@ -463,7 +490,7 @@ def process_search(
     days: int = 1,
 ) -> list:
     """Prepare sam.gov search and format results."""
-    yday = (datetime.now() - timedelta(days=days)).strftime("%m/%d/%Y")
+    yday = (datetime.now() - timedelta(days=6)).strftime("%m/%d/%Y")
     log.info("Searching for date: %s", yday)
 
     contract_results = search_contracts(api_client, sam_api_key, contract_list, yday)
