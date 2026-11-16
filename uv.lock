@@ -124,7 +124,7 @@ wheels = [
 [[package]]
 name = "sam-contract-alerts"
 version = "1.0.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "certifi" },
     { name = "python-dateutil" },
