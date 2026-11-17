@@ -4,6 +4,11 @@ Turn SAM.gov award records into display fields.
 
 from datetime import datetime
 
+from dateutil.relativedelta import relativedelta
+
+# Awards whose period of performance started within this window count as new
+NEW_AWARD_WINDOW = relativedelta(months=1)
+
 
 def format_award_type(award_type: str) -> str:
     """
@@ -54,7 +59,7 @@ def format_competition(
     return " ".join(parts)
 
 
-def extract_contract_details(award_summary: dict, yday: str) -> dict:
+def extract_contract_details(award_summary: dict, now: datetime | None = None) -> dict:
     """
     Extract contract details from award summary
     """
@@ -145,9 +150,10 @@ def extract_contract_details(award_summary: dict, yday: str) -> dict:
         "name", ""
     )
 
-    # Only surface competition details for new awards.
-    yday_date = datetime.strptime(yday, "%m/%d/%Y")
-    if parsed_pop_start is not None and parsed_pop_start < yday_date:
+    # Only surface competition details for new awards: PoP start within the
+    # past month, in the future, or unknown.
+    cutoff = ((now or datetime.now()) - NEW_AWARD_WINDOW).date()
+    if parsed_pop_start is not None and parsed_pop_start.date() < cutoff:
         contract_info["competition"] = ""
     else:
         contract_info["competition"] = format_competition(

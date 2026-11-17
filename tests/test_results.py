@@ -2,6 +2,10 @@
 Tests for results.py
 """
 
+from datetime import datetime
+
+import pytest
+
 from sam_contract_alerts import results
 
 
@@ -98,7 +102,7 @@ def test_extract_contract_details():
         },
     }
 
-    result = results.extract_contract_details(award_summary, "02/24/2024")
+    result = results.extract_contract_details(award_summary, now=datetime(2024, 2, 25))
 
     assert result["date"] == "02/25/2024"
     assert result["company"] == "Test Company"
@@ -134,7 +138,7 @@ def test_extract_contract_details_space_separated_date_signed():
         },
     }
 
-    result = results.extract_contract_details(award_summary, "09/30/2026")
+    result = results.extract_contract_details(award_summary)
 
     assert result["date"] == "09/30/2026"
 
@@ -154,7 +158,7 @@ def test_extract_contract_details_fallback_to_awardee_name():
         },
     }
 
-    result = results.extract_contract_details(award_summary, "02/24/2024")
+    result = results.extract_contract_details(award_summary)
 
     assert result["company"] == "Test Company"
     assert result["unique_entity_id"] == ""
@@ -190,9 +194,9 @@ def test_extract_contract_details_omits_competition_for_existing_award():
         },
     }
 
-    # Period of performance started well before the evaluated date, so this is
-    # an update to an existing award and competition details are omitted.
-    result = results.extract_contract_details(award_summary, "09/24/2026")
+    # Period of performance started more than a month ago, so this is an
+    # update to an existing award and competition details are omitted.
+    result = results.extract_contract_details(award_summary, now=datetime(2026, 9, 25))
 
     assert result["competition"] == ""
 
@@ -212,7 +216,7 @@ def test_extract_contract_details_empty_obligation():
         },
     }
 
-    result = results.extract_contract_details(award_summary, "02/24/2024")
+    result = results.extract_contract_details(award_summary)
 
     assert result["obligation"] == ""
     assert result["action"] == ""
@@ -220,3 +224,43 @@ def test_extract_contract_details_empty_obligation():
     assert result["pop_start"] == ""
     assert result["pop_end_date"] == ""
     assert result["contract_end_date"] == ""
+
+
+def award_with_pop_start(pop_start: str | None) -> dict:
+    dates = {"date_signed": "2026-11-16T00:00:00Z"}
+    if pop_start:
+        dates["period_of_performance_start_date"] = f"{pop_start} 00:00:00.000"
+
+    return {
+        "contract_id": {"reason_for_modification": {}},
+        "award_details": {
+            "dates": dates,
+            "dollars": {},
+            "total_contract_dollars": {},
+            "awardee_data": {"awardee_header": {"awardee_name": "Test Company"}},
+            "product_or_service_information": {},
+            "competition_information": {"number_of_offers_received": "2"},
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    ("now", "pop_start", "shown"),
+    [
+        # One month back from 11/17/2026 is 10/17/2026
+        (datetime(2026, 11, 17, 9, 30), "2026-10-17", True),
+        (datetime(2026, 11, 17, 9, 30), "2026-10-16", False),
+        (datetime(2026, 11, 17, 9, 30), "2026-11-16", True),
+        # Future start dates are new awards
+        (datetime(2026, 11, 17, 9, 30), "2027-01-01", True),
+        # Unknown start date still shows competition
+        (datetime(2026, 11, 17, 9, 30), None, True),
+        # Calendar months: one month back from 03/31 is 02/28
+        (datetime(2026, 3, 31), "2026-02-28", True),
+        (datetime(2026, 3, 31), "2026-02-27", False),
+    ],
+)
+def test_extract_contract_details_competition_window(now, pop_start, shown):
+    result = results.extract_contract_details(award_with_pop_start(pop_start), now=now)
+
+    assert result["competition"] == ("2 offers received." if shown else "")

@@ -35,7 +35,7 @@ def search_contracts(
             parent_updates = sam.search(api_client, sam_api_key, yday, criteria)
 
             for update in parent_updates:
-                contract_info = results.extract_contract_details(update, yday)
+                contract_info = results.extract_contract_details(update)
                 contract_details.append(contract_info)
 
             log.info("Searching for child award updates under IDV..")
@@ -43,7 +43,7 @@ def search_contracts(
             child_updates = sam.search(api_client, sam_api_key, yday, criteria)
 
             for update in child_updates:
-                contract_info = results.extract_contract_details(update, yday)
+                contract_info = results.extract_contract_details(update)
                 contract_details.append(contract_info)
 
         elif contract.type == "AWARD":
@@ -53,7 +53,7 @@ def search_contracts(
             award_updates = sam.search(api_client, sam_api_key, yday, criteria)
 
             for update in award_updates:
-                contract_info = results.extract_contract_details(update, yday)
+                contract_info = results.extract_contract_details(update)
                 contract_details.append(contract_info)
 
         if contract_details:
@@ -86,7 +86,7 @@ def search_naics(
             contract_updates = sam.search(api_client, sam_api_key, yday, criteria)
 
             for update in contract_updates:
-                contract_info = results.extract_contract_details(update, yday)
+                contract_info = results.extract_contract_details(update)
                 contract_details.append(contract_info)
 
         if contract_details:
