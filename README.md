@@ -1,7 +1,7 @@
 # SAM.gov contract awards search and post to a chat channel
 [![sam-contract-alerts-build](https://github.com/MindPetal/sam-contract-alerts/actions/workflows/sam-contract-alerts-build.yaml/badge.svg)](https://github.com/MindPetal/sam-contract-alerts/actions/workflows/sam-contract-alerts-build.yaml) [![sam-contract-alerts-run](https://github.com/MindPetal/sam-contract-alerts/actions/workflows/sam-contract-alerts-run.yaml/badge.svg)](https://github.com/MindPetal/sam-contract-alerts/actions/workflows/sam-contract-alerts-run.yaml)
 
-Python client to search government contract awards from SAM.gov API for the prior day: https://open.gsa.gov/api/contract-awards. 
+GitHub Actions workflows and Python client to search government contract awards from SAM.gov API for the prior day: https://open.gsa.gov/api/contract-awards. 
 
 [sam-contract-alerts-run](https://github.com/MindPetal/sam-contract-alerts/actions/workflows/sam-contract-alerts-run.yaml) pulls contract updates for specified contracts and NAICS/agencies each day and posts them to MS Teams, Slack, or both. To run this you must obtain and configure as actions repo secrets:
 
