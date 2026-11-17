@@ -35,12 +35,12 @@ def test_search_by_contract_no_with_idv_no(mocker, api_client):
         api_client,
         "test-api-key",
         "02/24/2024",
-        {"contract_no": "75N98027F00001", "idv_no": "75N91023A00006"},
+        {"contract_no": "TEST27F00001", "idv_no": "TEST23A00006"},
     )
 
     kwargs = mock_search.call_args.kwargs
-    assert kwargs["piid"] == "75N98027F00001"
-    assert kwargs["referenced_idv_piid"] == "75N91023A00006"
+    assert kwargs["piid"] == "TEST27F00001"
+    assert kwargs["referenced_idv_piid"] == "TEST23A00006"
 
 
 def test_search_by_contract_no_without_idv_no(mocker, api_client):
@@ -53,11 +53,11 @@ def test_search_by_contract_no_without_idv_no(mocker, api_client):
         api_client,
         "test-api-key",
         "02/24/2024",
-        {"contract_no": "75N98027F00001", "idv_no": ""},
+        {"contract_no": "TEST27F00001", "idv_no": ""},
     )
 
     kwargs = mock_search.call_args.kwargs
-    assert kwargs["piid"] == "75N98027F00001"
+    assert kwargs["piid"] == "TEST27F00001"
     assert "referenced_idv_piid" not in kwargs
 
 

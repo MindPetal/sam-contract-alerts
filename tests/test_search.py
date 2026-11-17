@@ -2,6 +2,8 @@
 Tests for search.py
 """
 
+import pytest
+
 from sam_contract_alerts import search
 from sam_contract_alerts.config import (
     ContractEntry,
@@ -191,20 +193,23 @@ def test_process_search_passes_idv_no(mocker, api_client):
     search.process_search(
         api_client,
         "test-api-key",
-        [ContractEntry("75N98027F00001", "75N91023A00006", "NIH EAMSS", "AWARD")],
+        [ContractEntry("TEST27F00001", "TEST23A00006", "Test Program", "AWARD")],
         [],
     )
 
     criteria = mock_search.call_args.args[3]
-    assert criteria == {"contract_no": "75N98027F00001", "idv_no": "75N91023A00006"}
+    assert criteria == {"contract_no": "TEST27F00001", "idv_no": "TEST23A00006"}
 
 
-def settings() -> Settings:
+def settings(
+    ms_webhook_url: str = "https://webhook.example.com", slack_webhook_url: str = ""
+) -> Settings:
     return Settings(
         sam_api_key="test-api-key",
         contracts=(ContractEntry("123", "", "Test", "AWARD"),),
         naics=(),
-        ms_webhook_url="https://webhook.example.com",
+        ms_webhook_url=ms_webhook_url,
+        slack_webhook_url=slack_webhook_url,
     )
 
 
@@ -232,3 +237,50 @@ def test_main_no_results(mocker):
     search.main(settings())
 
     mock_post.assert_not_called()
+
+
+SLACK_URL = "https://hooks.slack.com/services/T/B/X"
+
+
+def test_main_posts_to_slack_only(mocker):
+    results = [{"index": 1, "contract_no": "123", "contract_details": []}]
+    mocker.patch("sam_contract_alerts.search.process_search", return_value=results)
+    mock_teams_post = mocker.patch("sam_contract_alerts.teams.post")
+    mock_slack_format = mocker.patch(
+        "sam_contract_alerts.slack.format_results", return_value=["blocks"]
+    )
+    mock_slack_post = mocker.patch("sam_contract_alerts.slack.post")
+
+    search.main(settings(ms_webhook_url="", slack_webhook_url=SLACK_URL))
+
+    mock_teams_post.assert_not_called()
+    mock_slack_format.assert_called_once_with(results)
+    mock_slack_post.assert_called_once_with(SLACK_URL, ["blocks"])
+
+
+def test_main_posts_to_both(mocker):
+    results = [{"index": 1, "contract_no": "123", "contract_details": []}]
+    mocker.patch("sam_contract_alerts.search.process_search", return_value=results)
+    mocker.patch("sam_contract_alerts.teams.format_results", return_value=["items"])
+    mock_teams_post = mocker.patch("sam_contract_alerts.teams.post")
+    mocker.patch("sam_contract_alerts.slack.format_results", return_value=["blocks"])
+    mock_slack_post = mocker.patch("sam_contract_alerts.slack.post")
+
+    search.main(settings(slack_webhook_url=SLACK_URL))
+
+    mock_teams_post.assert_called_once_with("https://webhook.example.com", ["items"])
+    mock_slack_post.assert_called_once_with(SLACK_URL, ["blocks"])
+
+
+def test_main_teams_failure_still_posts_slack(mocker):
+    results = [{"index": 1, "contract_no": "123", "contract_details": []}]
+    mocker.patch("sam_contract_alerts.search.process_search", return_value=results)
+    mocker.patch("sam_contract_alerts.teams.format_results", return_value=["items"])
+    mocker.patch("sam_contract_alerts.teams.post", side_effect=Exception("boom"))
+    mocker.patch("sam_contract_alerts.slack.format_results", return_value=["blocks"])
+    mock_slack_post = mocker.patch("sam_contract_alerts.slack.post")
+
+    with pytest.raises(RuntimeError, match="Posting failed for: teams"):
+        search.main(settings(slack_webhook_url=SLACK_URL))
+
+    mock_slack_post.assert_called_once()

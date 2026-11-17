@@ -15,50 +15,6 @@ def test_build_textblock():
     assert result == expected
 
 
-def test_build_detail_content_appends_competition_last():
-    detail = {
-        "date": "Feb 25, 2024",
-        "company": "Test Company",
-        "action": "Exercise an option: $50,000 delivery order",
-        "total_obligated": "$86,974,480.71",
-        "total_value": "$170,000,000",
-        "desc": "Test description",
-        "piid": "123456789",
-        "pop_start": "Mar 01, 2024",
-        "pop_end_date": "Jun 30, 2025",
-        "contract_end_date": "Jun 30, 2026",
-        "competition": "1 offer received. Not competed, no set aside used.",
-    }
-
-    row_text = teams.build_detail_content(detail)
-
-    assert row_text.endswith(
-        "Test description | 1 offer received. Not competed, no set aside used."
-    )
-    # competition string appears after the description
-    assert row_text.index("Test description") < row_text.index("1 offer received.")
-
-
-def test_build_detail_content_omits_blank_competition():
-    detail = {
-        "date": "Feb 25, 2024",
-        "company": "Test Company",
-        "action": "$50,000 delivery order",
-        "total_obligated": "$86,974,480.71",
-        "total_value": "$170,000,000",
-        "desc": "Test description",
-        "piid": "123456789",
-        "pop_start": "Mar 01, 2024",
-        "pop_end_date": "Jun 30, 2025",
-        "contract_end_date": "Jun 30, 2026",
-        "competition": "",
-    }
-
-    row_text = teams.build_detail_content(detail)
-
-    assert row_text.endswith("Test description")
-
-
 def test_format_results_with_contract_no():
     raw_results = [
         {
@@ -248,21 +204,6 @@ def test_format_results_empty():
     result = teams.format_results([])
 
     assert result == []
-
-
-def test_build_search_url_contract_no():
-    result = teams.build_search_url("123456789")
-
-    assert "123456789" in result
-    assert "sam.gov" in result
-
-
-def test_build_entity_url():
-    result = teams.build_entity_url("SAMPLEUEI12345")
-
-    assert (
-        result == "https://sam.gov/entities/view/SAMPLEUEI12345/coreData?status=Active"
-    )
 
 
 def test_post(mocker):

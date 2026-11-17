@@ -29,19 +29,37 @@ class Settings:
     naics: tuple[NaicsEntry, ...]
     ms_webhook_url: str
     days: int = 1
+    slack_webhook_url: str = ""
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] = os.environ) -> "Settings":
         """
-        Read SAM_API_KEY, CONTRACT_LIST, NAICS_LIST, MS_URL and optional DAYS
+        Read SAM_API_KEY, CONTRACT_LIST, NAICS_LIST, optional DAYS, and at least
+        one of MS_URL / SLACK_URL
         """
+        ms_webhook_url, slack_webhook_url = read_webhook_urls(env)
+
         return cls(
             sam_api_key=env["SAM_API_KEY"],
             contracts=tuple(parse_contract_list(env["CONTRACT_LIST"])),
             naics=tuple(parse_naics_list(env["NAICS_LIST"])),
-            ms_webhook_url=env["MS_URL"],
+            ms_webhook_url=ms_webhook_url,
             days=int(env.get("DAYS", "1")),
+            slack_webhook_url=slack_webhook_url,
         )
+
+
+def read_webhook_urls(env: Mapping[str, str]) -> tuple[str, str]:
+    """
+    Read the MS Teams and Slack webhook URLs. Either may be blank, but not both.
+    """
+    ms_webhook_url = env.get("MS_URL", "").strip()
+    slack_webhook_url = env.get("SLACK_URL", "").strip()
+
+    if not ms_webhook_url and not slack_webhook_url:
+        raise ValueError("Set MS_URL, SLACK_URL, or both")
+
+    return ms_webhook_url, slack_webhook_url
 
 
 def parse_contract_list(contract_list: str) -> list[ContractEntry]:

@@ -2,7 +2,7 @@
 Tests for results.py
 """
 
-from datetime import datetime
+from datetime import date, datetime
 
 import pytest
 
@@ -264,3 +264,76 @@ def test_extract_contract_details_competition_window(now, pop_start, shown):
     result = results.extract_contract_details(award_with_pop_start(pop_start), now=now)
 
     assert result["competition"] == ("2 offers received." if shown else "")
+
+
+def test_build_detail_content_appends_competition_last():
+    detail = {
+        "date": "Feb 25, 2024",
+        "company": "Test Company",
+        "action": "Exercise an option: $50,000 delivery order",
+        "total_obligated": "$86,974,480.71",
+        "total_value": "$170,000,000",
+        "desc": "Test description",
+        "piid": "123456789",
+        "pop_start": "Mar 01, 2024",
+        "pop_end_date": "Jun 30, 2025",
+        "contract_end_date": "Jun 30, 2026",
+        "competition": "1 offer received. Not competed, no set aside used.",
+    }
+
+    row_text = results.build_detail_content(detail)
+
+    assert row_text.endswith(
+        "Test description | 1 offer received. Not competed, no set aside used."
+    )
+    # competition string appears after the description
+    assert row_text.index("Test description") < row_text.index("1 offer received.")
+
+
+def test_build_detail_content_omits_blank_competition():
+    detail = {
+        "date": "Feb 25, 2024",
+        "company": "Test Company",
+        "action": "$50,000 delivery order",
+        "total_obligated": "$86,974,480.71",
+        "total_value": "$170,000,000",
+        "desc": "Test description",
+        "piid": "123456789",
+        "pop_start": "Mar 01, 2024",
+        "pop_end_date": "Jun 30, 2025",
+        "contract_end_date": "Jun 30, 2026",
+        "competition": "",
+    }
+
+    row_text = results.build_detail_content(detail)
+
+    assert row_text.endswith("Test description")
+
+
+def test_build_search_url_contract_no():
+    result = results.build_search_url("123456789")
+
+    assert "123456789" in result
+    assert "sam.gov" in result
+
+
+def test_build_entity_url():
+    result = results.build_entity_url("SAMPLEUEI12345")
+
+    assert (
+        result == "https://sam.gov/entities/view/SAMPLEUEI12345/coreData?status=Active"
+    )
+
+
+def test_header_text():
+    today = date.today().strftime("%A, %m/%d/%Y")
+
+    assert results.header_text() == f"**{today}.** Contract updates."
+
+
+def test_result_heading():
+    assert (
+        results.result_heading({"contract_no": "123", "contract_nm": "My Contract"})
+        == "**My Contract** - 123:"
+    )
+    assert results.result_heading({"agency": "TA"}) == "**TA** updates:"

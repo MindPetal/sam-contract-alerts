@@ -1,8 +1,9 @@
 """
-Turn SAM.gov award records into display fields.
+Turn SAM.gov award records into display fields and the Markdown text shared
+by every chat channel.
 """
 
-from datetime import datetime
+from datetime import date, datetime
 
 from dateutil.relativedelta import relativedelta
 
@@ -161,3 +162,73 @@ def extract_contract_details(award_summary: dict, now: datetime | None = None) -
         )
 
     return contract_info
+
+
+def header_text() -> str:
+    """
+    Message header shown above all contract updates
+    """
+    return f"**{date.today().strftime('%A, %m/%d/%Y')}.** Contract updates."
+
+
+def result_heading(result: dict) -> str:
+    """
+    Heading for one tracked contract or NAICS agency group
+    """
+    if "contract_no" in result:
+        return f"**{result['contract_nm']}** - {result['contract_no']}:"
+
+    return f"**{result['agency']}** updates:"
+
+
+def build_detail_content(detail: dict) -> str:
+    """
+    Build the pipe-delimited content string for one contract detail
+    """
+    desc = detail["desc"].replace("|!#^", " ").replace("\n", " ")
+    desc = " ".join(desc.split())
+    contract_url = build_search_url(detail["piid"])
+    unique_entity_id = detail.get("unique_entity_id", "")
+
+    if unique_entity_id and detail["company"]:
+        entity_url = build_entity_url(unique_entity_id)
+        company_text = f"[{detail['company']}]({entity_url})"
+    else:
+        company_text = detail["company"]
+
+    fields = [
+        f"{company_text}",
+        f"{detail['date']}",
+        f"[{detail['piid']}]({contract_url})",
+        f"{detail['action']}",
+        f"**To Date:** {detail['total_obligated']}",
+        f"**TCV:** {detail['total_value']}",
+        f"**Start:** {detail['pop_start']}",
+        f"**End:** {detail['pop_end_date']}",
+        f"**Contract End:** {detail['contract_end_date']}",
+        f"{desc}",
+    ]
+
+    if detail.get("competition"):
+        fields.append(f"{detail['competition']}")
+
+    return " | ".join(fields)
+
+
+def build_search_url(piid: str) -> str:
+    """
+    Build SAM.gov search URL for viewing contracts
+    """
+
+    return (
+        f"https://sam.gov/search/?sfm%5BsimpleSearch%5D%5BkeywordTags%5D%5B0%5D%5Bkey%5D={piid}"
+        f"&sfm%5BsimpleSearch%5D%5BkeywordTags%5D%5B0%5D%5Bvalue%5D={piid}"
+    )
+
+
+def build_entity_url(unique_entity_id: str) -> str:
+    """
+    Build SAM.gov entity URL for viewing an awardee's core data
+    """
+
+    return f"https://sam.gov/entities/view/{unique_entity_id}/coreData?status=Active"
