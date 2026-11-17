@@ -1,6 +1,6 @@
 """
 Run the contract and NAICS searches, dedupe the results, and post them to the
-chat channel.
+configured chat channels (MS Teams and/or Slack).
 """
 
 import logging
@@ -8,7 +8,7 @@ from collections.abc import Iterable
 from datetime import datetime, timedelta
 
 import client
-from sam_contract_alerts import results, sam, teams
+from sam_contract_alerts import results, sam, slack, teams
 from sam_contract_alerts.config import ContractEntry, NaicsEntry, Settings
 
 log = logging.getLogger(__name__)
@@ -166,7 +166,34 @@ def main(settings: Settings) -> None:
     )
 
     if contract_results:
-        log.info("Posting results")
-        teams.post(settings.ms_webhook_url, teams.format_results(contract_results))
+        post_results(settings, contract_results)
     else:
         log.info("No contract updates found")
+
+
+def post_results(settings: Settings, contract_results: list[dict]) -> None:
+    """
+    Post to every configured chat channel. A failure on one channel doesn't
+    stop the others, but the run still fails afterwards.
+    """
+    channels = [
+        (teams, settings.ms_webhook_url),
+        (slack, settings.slack_webhook_url),
+    ]
+    failed = []
+
+    for channel, webhook_url in channels:
+        if not webhook_url:
+            continue
+
+        name = channel.__name__.rsplit(".", 1)[-1]
+        log.info("Posting results to %s", name)
+
+        try:
+            channel.post(webhook_url, channel.format_results(contract_results))
+        except Exception:
+            log.exception("Posting results to %s failed", name)
+            failed.append(name)
+
+    if failed:
+        raise RuntimeError(f"Posting failed for: {', '.join(failed)}")

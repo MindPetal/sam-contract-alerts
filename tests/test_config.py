@@ -11,15 +11,13 @@ from sam_contract_alerts.config import ContractEntry, NaicsEntry, Settings
 def test_parse_contract_list():
     result = config.parse_contract_list(
         "123456789:My Contract:IDV,"
-        " 75N98027F00001 : 75N91023A00006 : NIH EAMSS (Unissant) : AWARD,"
+        " TEST27F00001 : TEST23A00006 : Test Program (Acme) : AWARD,"
         "098765432::Empty IDV:AWARD"
     )
 
     assert result == [
         ContractEntry("123456789", "", "My Contract", "IDV"),
-        ContractEntry(
-            "75N98027F00001", "75N91023A00006", "NIH EAMSS (Unissant)", "AWARD"
-        ),
+        ContractEntry("TEST27F00001", "TEST23A00006", "Test Program (Acme)", "AWARD"),
         ContractEntry("098765432", "", "Empty IDV", "AWARD"),
     ]
 
@@ -53,7 +51,7 @@ def test_settings_from_env():
     settings = Settings.from_env(
         {
             "SAM_API_KEY": "key",
-            "CONTRACT_LIST": "75N98027F00001:75N91023A00006:NIH EAMSS:AWARD",
+            "CONTRACT_LIST": "TEST27F00001:TEST23A00006:Test Program:AWARD",
             "NAICS_LIST": "Test Agency:TA:[541512]",
             "MS_URL": "https://webhook.example.com",
             "DAYS": "3",
@@ -63,7 +61,7 @@ def test_settings_from_env():
     assert settings == Settings(
         sam_api_key="key",
         contracts=(
-            ContractEntry("75N98027F00001", "75N91023A00006", "NIH EAMSS", "AWARD"),
+            ContractEntry("TEST27F00001", "TEST23A00006", "Test Program", "AWARD"),
         ),
         naics=(NaicsEntry("Test Agency", "TA", ("541512",)),),
         ms_webhook_url="https://webhook.example.com",
@@ -96,3 +94,34 @@ def test_settings_from_env_rejects_bad_contract_entry():
                 "MS_URL": "https://webhook.example.com",
             }
         )
+
+
+BASE_ENV = {"SAM_API_KEY": "key", "CONTRACT_LIST": "", "NAICS_LIST": ""}
+
+
+def test_settings_from_env_slack_only():
+    settings = Settings.from_env(
+        {**BASE_ENV, "SLACK_URL": " https://hooks.slack.com/services/T/B/X "}
+    )
+
+    assert settings.ms_webhook_url == ""
+    assert settings.slack_webhook_url == "https://hooks.slack.com/services/T/B/X"
+
+
+def test_settings_from_env_both_channels():
+    settings = Settings.from_env(
+        {
+            **BASE_ENV,
+            "MS_URL": "https://webhook.example.com",
+            "SLACK_URL": "https://hooks.slack.com/services/T/B/X",
+        }
+    )
+
+    assert settings.ms_webhook_url == "https://webhook.example.com"
+    assert settings.slack_webhook_url == "https://hooks.slack.com/services/T/B/X"
+
+
+@pytest.mark.parametrize("env", [{}, {"MS_URL": "", "SLACK_URL": " "}])
+def test_settings_from_env_requires_a_channel(env):
+    with pytest.raises(ValueError, match="MS_URL, SLACK_URL"):
+        Settings.from_env({**BASE_ENV, **env})
