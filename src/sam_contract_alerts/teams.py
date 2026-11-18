@@ -21,16 +21,20 @@ def build_textblock(content: str) -> dict:
     return {"type": "TextBlock", "text": content, "wrap": True}
 
 
-def build_row(content: str, stripe_index: int) -> dict:
+def build_row(lines: list[str], stripe_index: int) -> dict:
     """
-    Build a striped single-cell TableRow
+    Build a striped single-cell TableRow with one TextBlock per line, so each
+    line starts on its own row without extra paragraph spacing
     """
+    items = [build_textblock(line) for line in lines]
+
+    for item in items[1:]:
+        item["spacing"] = "None"
+
     return {
         "type": "TableRow",
         "style": "emphasis" if stripe_index % 2 else "default",
-        "cells": [
-            {"type": "TableCell", "items": [build_textblock(content)]},
-        ],
+        "cells": [{"type": "TableCell", "items": items}],
     }
 
 
@@ -53,7 +57,7 @@ def build_details_table(heading: str, details: list[dict]) -> dict:
         "gridStyle": "default",
         "rows": [header_row]
         + [
-            build_row(results.build_detail_content(detail), i)
+            build_row(results.build_detail_lines(detail), i)
             for i, detail in enumerate(details)
         ],
     }

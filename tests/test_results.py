@@ -266,48 +266,59 @@ def test_extract_contract_details_competition_window(now, pop_start, shown):
     assert result["competition"] == ("2 offers received." if shown else "")
 
 
-def test_build_detail_content_appends_competition_last():
+DETAIL = {
+    "date": "02/25/2024",
+    "company": "TEST COMPANY LLC",
+    "unique_entity_id": "TESTUEI00001",
+    "action": "$50,000 delivery order",
+    "total_obligated": "$86,974,480.71",
+    "total_value": "$170,000,000",
+    "desc": "Test description\nwith newline",
+    "piid": "TEST24F00001",
+    "pop_start": "03/01/2024",
+    "pop_end_date": "06/30/2025",
+    "contract_end_date": "06/30/2026",
+    "competition": "1 offer received. Not competed, no set aside used.",
+}
+
+
+def test_build_detail_lines():
+    lines = results.build_detail_lines(DETAIL)
+
+    entity_url = results.build_entity_url("TESTUEI00001")
+    search_url = results.build_search_url("TEST24F00001")
+    assert lines == [
+        f"[TEST COMPANY LLC]({entity_url}) | 02/25/2024 | [TEST24F00001]({search_url})",
+        "$50,000 delivery order | **To Date:** $86,974,480.71 | **TCV:** $170,000,000",
+        "**Contract Start:** 03/01/2024 | **PoP End:** 06/30/2025"
+        " | **Contract End:** 06/30/2026",
+        "Test description with newline",
+        "1 offer received. Not competed, no set aside used.",
+    ]
+
+
+def test_build_detail_lines_skips_blank_parts_and_lines():
     detail = {
-        "date": "Feb 25, 2024",
-        "company": "Test Company",
-        "action": "Exercise an option: $50,000 delivery order",
-        "total_obligated": "$86,974,480.71",
-        "total_value": "$170,000,000",
-        "desc": "Test description",
-        "piid": "123456789",
-        "pop_start": "Mar 01, 2024",
-        "pop_end_date": "Jun 30, 2025",
-        "contract_end_date": "Jun 30, 2026",
-        "competition": "1 offer received. Not competed, no set aside used.",
-    }
-
-    row_text = results.build_detail_content(detail)
-
-    assert row_text.endswith(
-        "Test description | 1 offer received. Not competed, no set aside used."
-    )
-    # competition string appears after the description
-    assert row_text.index("Test description") < row_text.index("1 offer received.")
-
-
-def test_build_detail_content_omits_blank_competition():
-    detail = {
-        "date": "Feb 25, 2024",
-        "company": "Test Company",
-        "action": "$50,000 delivery order",
-        "total_obligated": "$86,974,480.71",
-        "total_value": "$170,000,000",
-        "desc": "Test description",
-        "piid": "123456789",
-        "pop_start": "Mar 01, 2024",
-        "pop_end_date": "Jun 30, 2025",
-        "contract_end_date": "Jun 30, 2026",
+        **DETAIL,
+        "unique_entity_id": "",
+        "action": "",
+        "desc": "  ",
         "competition": "",
     }
 
-    row_text = results.build_detail_content(detail)
+    lines = results.build_detail_lines(detail)
 
-    assert row_text.endswith("Test description")
+    assert lines[0].startswith("TEST COMPANY LLC | 02/25/2024 | [TEST24F00001](")
+    assert lines[1] == "**To Date:** $86,974,480.71 | **TCV:** $170,000,000"
+    assert lines[2].startswith("**Contract Start:** 03/01/2024")
+    # No description or competition line
+    assert len(lines) == 3
+
+
+def test_build_detail_content_joins_lines():
+    assert results.build_detail_content(DETAIL) == "\n".join(
+        results.build_detail_lines(DETAIL)
+    )
 
 
 def test_build_search_url_contract_no():

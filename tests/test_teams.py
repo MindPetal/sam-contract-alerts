@@ -8,6 +8,11 @@ import client
 from sam_contract_alerts import teams
 
 
+def row_text_of(row: dict) -> str:
+    """All of a row's lines, one per TextBlock, joined with newlines."""
+    return "\n".join(item["text"] for item in row["cells"][0]["items"])
+
+
 def test_build_textblock():
     result = teams.build_textblock("Test content")
     expected = {"type": "TextBlock", "text": "Test content", "wrap": True}
@@ -56,7 +61,7 @@ def test_format_results_with_contract_no():
     assert "Test Contract" in heading_text
     assert "123456789" in heading_text
     assert "1." not in heading_text
-    row_text = table["rows"][1]["cells"][0]["items"][0]["text"]
+    row_text = row_text_of(table["rows"][1])
     assert " | " in row_text
     assert "[123456789]" in row_text
     assert "**Contract:**" not in row_text
@@ -71,8 +76,8 @@ def test_format_results_with_contract_no():
     assert "Exercise an option: $50,000 delivery order" in row_text
     assert "**To Date:** $86,974,480.71" in row_text
     assert "**TCV:** $170,000,000" in row_text
-    assert "**Start:** Mar 01, 2024" in row_text
-    assert "**End:** Jun 30, 2025" in row_text
+    assert "**Contract Start:** Mar 01, 2024" in row_text
+    assert "**PoP End:** Jun 30, 2025" in row_text
     assert "**Contract End:** Jun 30, 2026" in row_text
     assert "Test description" in row_text
 
@@ -112,12 +117,12 @@ def test_format_results_with_naics():
     assert table["firstRowAsHeaders"] is True
     assert len(table["rows"]) == 2
     assert table["rows"][0]["style"] == "accent"
-    row_text = table["rows"][1]["cells"][0]["items"][0]["text"]
+    row_text = row_text_of(table["rows"][1])
     assert " | " in row_text
     assert "[987654321]" in row_text
     assert "**Contract:**" not in row_text
     assert "**To Date:** $86,974,480.71" in row_text
-    assert "**End:** Jun 30, 2025" in row_text
+    assert "**PoP End:** Jun 30, 2025" in row_text
     assert "**Contract End:** Jun 30, 2026" in row_text
     # company name appears before contract no
     assert row_text.index("Test Company") < row_text.index("[987654321]")
@@ -190,7 +195,7 @@ def test_format_results_blank_reason_omitted():
 
     result = teams.format_results(raw_results)
 
-    row_text = result[2]["rows"][1]["cells"][0]["items"][0]["text"]
+    row_text = row_text_of(result[2]["rows"][1])
     # blank reason field is omitted, so no empty segment between piid and obligation
     assert "|  |" not in row_text
     assert "[123456789](https://sam.gov/search/" in row_text
@@ -219,3 +224,14 @@ def test_post(mocker):
     body = mock_teams_post.call_args.kwargs["body"]
     assert body["type"] == "message"
     assert body["attachments"][0]["content"]["body"][0]["items"] == items
+
+
+def test_build_row_one_textblock_per_line():
+    row = teams.build_row(["line one", "line two", "line three"], 1)
+
+    assert row["style"] == "emphasis"
+    assert row["cells"][0]["items"] == [
+        {"type": "TextBlock", "text": "line one", "wrap": True},
+        {"type": "TextBlock", "text": "line two", "wrap": True, "spacing": "None"},
+        {"type": "TextBlock", "text": "line three", "wrap": True, "spacing": "None"},
+    ]

@@ -24,7 +24,14 @@ Posting is handled by one module per chat tool, each called from `main` in [sear
 - [slack.py](src/sam_contract_alerts/slack.py) posts the same content as Slack `table` blocks.
 
 ## Sample output:
-[COMPANY NAME](tbd) | 09/15/2026 | Contract no. | $100,000.00 delivery order | To Date: $100,000.00 | TCV: $100,000.00 | Start: 09/15/2026 | End: 10/30/2026 | Contract End: 10/30/2026 | DESCRIPTION. | 1 offer received. Small business set aside - total.
+```
+COMPANY NAME | 09/15/2026 | Contract no.
+$100,000.00 delivery order | To Date: $100,000.00 | TCV: $100,000.00
+Contract Start: 09/15/2026 | PoP End: 10/30/2026 | Contract End: 10/30/2026
+DESCRIPTION.
+1 offer received. Small business set aside - total.
+```
+The company name and contract number link to SAM.gov.
 
 ## Local execution:
 

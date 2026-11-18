@@ -181,9 +181,11 @@ def result_heading(result: dict) -> str:
     return f"**{result['agency']}** updates:"
 
 
-def build_detail_content(detail: dict) -> str:
+def build_detail_lines(detail: dict) -> list[str]:
     """
-    Build the pipe-delimited content string for one contract detail
+    Build the display lines for one contract detail: awardee, date and contract
+    no; amounts; dates; description; then competition when present. Blank parts
+    and lines are left out.
     """
     desc = detail["desc"].replace("|!#^", " ").replace("\n", " ")
     desc = " ".join(desc.split())
@@ -196,23 +198,31 @@ def build_detail_content(detail: dict) -> str:
     else:
         company_text = detail["company"]
 
-    fields = [
-        f"{company_text}",
-        f"{detail['date']}",
-        f"[{detail['piid']}]({contract_url})",
-        f"{detail['action']}",
-        f"**To Date:** {detail['total_obligated']}",
-        f"**TCV:** {detail['total_value']}",
-        f"**Start:** {detail['pop_start']}",
-        f"**End:** {detail['pop_end_date']}",
-        f"**Contract End:** {detail['contract_end_date']}",
-        f"{desc}",
+    lines = [
+        [company_text, detail["date"], f"[{detail['piid']}]({contract_url})"],
+        [
+            detail["action"],
+            f"**To Date:** {detail['total_obligated']}",
+            f"**TCV:** {detail['total_value']}",
+        ],
+        [
+            f"**Contract Start:** {detail['pop_start']}",
+            f"**PoP End:** {detail['pop_end_date']}",
+            f"**Contract End:** {detail['contract_end_date']}",
+        ],
+        [desc],
+        [detail.get("competition", "")],
     ]
 
-    if detail.get("competition"):
-        fields.append(f"{detail['competition']}")
+    joined = (" | ".join(part for part in line if part) for line in lines)
+    return [line for line in joined if line]
 
-    return " | ".join(fields)
+
+def build_detail_content(detail: dict) -> str:
+    """
+    Build the content for one contract detail, one line per newline
+    """
+    return "\n".join(build_detail_lines(detail))
 
 
 def build_search_url(piid: str) -> str:
