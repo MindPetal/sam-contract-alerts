@@ -58,6 +58,9 @@ def test_format_results():
         ),
     ]
     assert table_texts(blocks[2])[0] == "TA updates:"
+    # Each detail row keeps its lines, separated by newlines
+    assert table_texts(blocks[1])[1].count("\n") == 4
+    assert "**" not in table_texts(blocks[1])[1]
     assert blocks[1]["column_settings"] == [{"is_wrapped": True}]
 
 

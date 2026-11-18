@@ -72,7 +72,7 @@ def parse_contract_list(contract_list: str) -> list[ContractEntry]:
     if not contract_list.strip():
         return entries
 
-    for entry in contract_list.split(","):
+    for position, entry in enumerate(contract_list.split(","), start=1):
         parts = [part.strip() for part in entry.split(":")]
 
         if len(parts) == 4:
@@ -81,8 +81,9 @@ def parse_contract_list(contract_list: str) -> list[ContractEntry]:
             contract_no, contract_nm, contract_type = parts
             idv_no = ""
         else:
+            # Identify the entry by position.
             raise ValueError(
-                f"Invalid contract entry '{entry}': expected "
+                f"Invalid CONTRACT_LIST entry #{position}: expected "
                 "NO:NAME:TYPE or NO:IDV_NO:NAME:TYPE"
             )
 

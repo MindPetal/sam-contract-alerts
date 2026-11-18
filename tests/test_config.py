@@ -23,8 +23,12 @@ def test_parse_contract_list():
 
 
 def test_parse_contract_list_invalid():
-    with pytest.raises(ValueError):
-        config.parse_contract_list("123456789:AWARD")
+    with pytest.raises(ValueError) as error:
+        config.parse_contract_list("123:Good:AWARD,123456789:AWARD")
+
+    # Identified by position, not by the (secret) entry text
+    assert "entry #2" in str(error.value)
+    assert "123456789" not in str(error.value)
 
 
 def test_parse_contract_list_empty():

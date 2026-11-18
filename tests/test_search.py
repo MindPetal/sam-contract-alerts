@@ -68,15 +68,14 @@ def test_search_naics(mocker, api_client):
         "02/24/2024",
     )
 
-    # Each NAICS code is searched separately, results combined per agency
+    # One search per agency covers all of its NAICS codes
     assert [c.args[3] for c in mock_search.call_args_list] == [
-        {"naics": "541512", "agency": "Test+Agency"},
-        {"naics": "541511", "agency": "Test+Agency"},
+        {"naics": "541512~541511", "agency": "Test+Agency"},
     ]
     assert len(results) == 1
     assert "naics" not in results[0]
     assert results[0]["agency"] == "TA"
-    assert len(results[0]["contract_details"]) == 2
+    assert len(results[0]["contract_details"]) == 1
 
 
 def test_search_naics_omits_agency_without_updates(mocker, api_client):
