@@ -80,9 +80,10 @@ def search_naics(
     for entry in naics_entries:
         contract_details = []
 
-        for naics in entry.naics_codes:
+        if entry.naics_codes:
             log.info("Processing NAICS search")
-            criteria = {"naics": naics, "agency": entry.agency}
+            # One search per agency covers all of its NAICS codes
+            criteria = {"naics": "~".join(entry.naics_codes), "agency": entry.agency}
             contract_updates = sam.search(api_client, sam_api_key, yday, criteria)
 
             for update in contract_updates:
