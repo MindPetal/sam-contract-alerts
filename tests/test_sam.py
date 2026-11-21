@@ -168,6 +168,8 @@ def test_search_gives_up_after_two_retries(mocker, api_client, mock_sleep):
         sam.search(api_client, "test-api-key", "02/24/2024", CRITERIA)
 
     assert error.value.status == 504
+    # Gateway Timeout is the standard reason, used since the response has none
+    assert error.value.reason == "Gateway Timeout"
     assert str(error.value) == (
         "SAM.gov search for contract failed (504), attempt 3 of 3"
     )
@@ -235,6 +237,31 @@ def test_search_retries_timeouts_and_connection_errors(
 def test_search_rejects_unknown_criteria(api_client, mock_sleep):
     with pytest.raises(ValueError):
         sam.search(api_client, "test-api-key", "02/24/2024", {"unknown": "x"})
+
+
+def test_search_error_keeps_http_reason(mocker, api_client, mock_sleep):
+    error = ApiException(status=403, reason="Forbidden")
+    mocker.patch("client.SamApi.search", side_effect=error)
+
+    with pytest.raises(sam.SamSearchError) as raised:
+        sam.search(api_client, "test-api-key", "02/24/2024", CRITERIA)
+
+    assert (raised.value.status, raised.value.reason) == (403, "Forbidden")
+
+
+def test_search_error_has_no_reason_without_http_response(
+    mocker, api_client, mock_sleep
+):
+    timeout = urllib3.exceptions.ReadTimeoutError(
+        urllib3.HTTPSConnectionPool("api.sam.gov"), "/search", "Read timed out"
+    )
+    mocker.patch("client.SamApi.search", side_effect=[timeout] * 3)
+
+    with pytest.raises(sam.SamSearchError) as raised:
+        sam.search(api_client, "test-api-key", "02/24/2024", CRITERIA)
+
+    assert raised.value.status == "ReadTimeoutError"
+    assert raised.value.reason is None
 
 
 def test_describe_leaves_out_identifiers():

@@ -171,6 +171,16 @@ def header_text() -> str:
     return f"**{date.today().strftime('%A, %m/%d/%Y')}.** Contract updates."
 
 
+def sam_error(status: int | str, message: str | None) -> str:
+    """
+    Note posted when a SAM.gov search still fails after its retries
+    """
+    return (
+        "⚠️ There was an error calling the SAM.gov API during the workflow run."
+        f" HTTP {status} received: {message}."
+    )
+
+
 def result_heading(result: dict) -> str:
     """
     Heading for one tracked contract or NAICS agency group
