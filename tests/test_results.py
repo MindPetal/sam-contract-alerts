@@ -2,7 +2,9 @@
 Tests for results.py
 """
 
+import json
 from datetime import date, datetime
+from types import SimpleNamespace
 
 import pytest
 
@@ -104,6 +106,7 @@ def test_extract_contract_details():
 
     result = results.extract_contract_details(award_summary, now=datetime(2024, 2, 25))
 
+    assert result["is_idv"] is False
     assert result["date"] == "02/25/2024"
     assert result["company"] == "Test Company"
     assert result["unique_entity_id"] == "SAMPLEUEI12345"
@@ -319,6 +322,140 @@ def test_build_detail_content_joins_lines():
     assert results.build_detail_content(DETAIL) == "\n".join(
         results.build_detail_lines(DETAIL)
     )
+
+
+# Fake BPA record in the SAM.gov response shape.
+FAKE_BPA_RESPONSE = {
+    "awardSummary": [
+        {
+            "contractId": {
+                "piid": "TEST25A0001",
+                "modificationNumber": "P00002",
+                "reasonForModification": {"code": "G", "name": "EXERCISE AN OPTION"},
+            },
+            "coreData": {
+                "awardOrIDV": "IDV",
+                "awardOrIDVType": {"code": "E", "name": "BPA"},
+            },
+            "awardDetails": {
+                "dates": {
+                    "dateSigned": "2026-01-15 00:00:00",
+                    "periodOfPerformanceStartDate": "2025-06-01 00:00:00",
+                    "lastDateToOrder": "2029-05-31 00:00:00",
+                },
+                "dollars": {"actionObligation": 0},
+                "totalContractDollars": {
+                    "totalActionObligation": 0,
+                    "totalBaseAndAllOptionsValue": 12345678.9,
+                },
+                "awardeeData": {
+                    "awardeeHeader": {"awardeeName": "EXAMPLE FEDERAL LLC"},
+                    "awardeeUEIInformation": {"uniqueEntityId": "TESTUEI00002"},
+                },
+                "productOrServiceInformation": {
+                    "descriptionOfContractRequirement": "TEST BPA FOR SUPPORT SERVICES."
+                },
+            },
+        }
+    ],
+    "totalRecords": "1",
+}
+
+
+def fake_bpa_summary(api_client) -> dict:
+    # Parse the fake record with the API client, as a real search would
+    response = SimpleNamespace(data=json.dumps(FAKE_BPA_RESPONSE))
+    award_response = api_client.deserialize(response, "AwardResponse")
+    return award_response.to_dict()["award_summary"][0]
+
+
+def test_client_keeps_idv_fields(api_client):
+    summary = fake_bpa_summary(api_client)
+
+    assert summary["core_data"]["award_or_idv"] == "IDV"
+    assert summary["award_details"]["dates"]["last_date_to_order"] == (
+        "2029-05-31 00:00:00"
+    )
+
+
+def test_bpa_detail_lines(api_client):
+    detail = results.extract_contract_details(
+        fake_bpa_summary(api_client), now=datetime(2026, 1, 16)
+    )
+
+    entity_url = results.build_entity_url("TESTUEI00002")
+    search_url = results.build_search_url("TEST25A0001")
+    company = f"[EXAMPLE FEDERAL LLC]({entity_url})"
+    assert detail["is_idv"] is True
+    assert results.build_detail_lines(detail) == [
+        f"{company} | 01/15/2026 | [TEST25A0001]({search_url})",
+        # $0 obligation left out, To Date omitted since the record has no
+        # exercised value, and the value is labeled as the ceiling
+        "Exercise an option: BPA | **Ceiling:** $12,345,678.9",
+        # No PoP End, and the last date to order shown as the contract end
+        "**Contract Start:** 06/01/2025 | **Contract End:** 05/31/2029",
+        "TEST BPA FOR SUPPORT SERVICES.",
+    ]
+
+
+def test_idv_keeps_nonzero_obligation():
+    summary = {
+        "contract_id": {"piid": "TEST25A0001"},
+        "core_data": {"award_or_idv": "IDV", "award_or_idv_type": {"name": "BPA"}},
+        "award_details": {
+            "dates": {"date_signed": "2026-01-15 00:00:00"},
+            "dollars": {"action_obligation": "500"},
+        },
+    }
+
+    assert results.extract_contract_details(summary)["action"] == "$500 BPA"
+
+
+def test_idv_keeps_pop_end_when_present():
+    lines = results.build_detail_lines({**DETAIL, "is_idv": True})
+
+    assert lines[1] == (
+        "$50,000 delivery order | **To Date:** $86,974,480.71"
+        " | **Ceiling:** $170,000,000"
+    )
+    assert "**PoP End:** 06/30/2025" in lines[2]
+
+
+def test_award_keeps_blank_pop_end_label():
+    lines = results.build_detail_lines({**DETAIL, "pop_end_date": ""})
+
+    assert lines[2] == (
+        "**Contract Start:** 03/01/2024 | **PoP End:**  | **Contract End:** 06/30/2026"
+    )
+
+
+@pytest.mark.parametrize(
+    "total_contract_dollars, to_date",
+    [
+        # Reported as $0, by the API client (string) or as a raw number
+        ({"total_base_and_exercised_options_value": "0"}, "**To Date:** $0"),
+        ({"total_base_and_exercised_options_value": 0}, "**To Date:** $0"),
+        # Left out, or null after the API client parses the response
+        ({}, None),
+        ({"total_base_and_exercised_options_value": None}, None),
+    ],
+)
+def test_to_date_shown_only_when_reported(total_contract_dollars, to_date):
+    summary = {
+        "contract_id": {"piid": "TEST25A0001"},
+        "award_details": {
+            "dates": {"date_signed": "2026-01-15 00:00:00"},
+            "total_contract_dollars": {
+                **total_contract_dollars,
+                "total_base_and_all_options_value": "1000",
+            },
+        },
+    }
+
+    lines = results.build_detail_lines(results.extract_contract_details(summary))
+
+    expected = " | ".join(part for part in [to_date, "**TCV:** $1,000"] if part)
+    assert lines[1] == expected
 
 
 def test_build_search_url_contract_no():

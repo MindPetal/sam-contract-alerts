@@ -91,12 +91,19 @@ def extract_contract_details(award_summary: dict, now: datetime | None = None) -
         contract_info["obligation"] = ""
 
     core_data = award_summary.get("core_data", {}) or {}
+    # IDVs (BPAs, IDCs, GWACs, etc.) report a ceiling and last date to order
+    is_idv = core_data.get("award_or_idv") == "IDV"
+    contract_info["is_idv"] = is_idv
+
     award_type = (core_data.get("award_or_idv_type", {}) or {}).get("name", "")
     award_type = format_award_type(award_type) if award_type else ""
 
-    obligation_part = " ".join(
-        part for part in [contract_info["obligation"], award_type] if part
-    )
+    # IDV actions don't obligate funds, so leave out their $0 obligation
+    action_obligation = contract_info["obligation"]
+    if is_idv and action_obligation and float(obligation) == 0:
+        action_obligation = ""
+
+    obligation_part = " ".join(part for part in [action_obligation, award_type] if part)
     if contract_info["reason"]:
         contract_info["action"] = f"{contract_info['reason']}: {obligation_part}"
     else:
@@ -104,8 +111,10 @@ def extract_contract_details(award_summary: dict, now: datetime | None = None) -
 
     total_dollars = award_details.get("total_contract_dollars", {})
     total_obligated = total_dollars.get("total_base_and_exercised_options_value", "")
+    # Blank when SAM.gov leaves the field out, so To Date can be omitted, but
+    # a reported $0 is kept
     contract_info["total_obligated"] = (
-        f"${float(total_obligated):,.12g}" if total_obligated else ""
+        f"${float(total_obligated):,.12g}" if total_obligated not in ("", None) else ""
     )
 
     total_value = total_dollars.get("total_base_and_all_options_value", "")
@@ -134,6 +143,8 @@ def extract_contract_details(award_summary: dict, now: datetime | None = None) -
         contract_info["pop_end_date"] = ""
 
     ultimate_completion = dates.get("ultimate_completion_date", "")
+    if is_idv:
+        ultimate_completion = dates.get("last_date_to_order") or ultimate_completion
     if ultimate_completion:
         parsed_end = datetime.strptime(ultimate_completion[:10], "%Y-%m-%d")
         contract_info["contract_end_date"] = parsed_end.strftime("%m/%d/%Y")
@@ -208,16 +219,27 @@ def build_detail_lines(detail: dict) -> list[str]:
     else:
         company_text = detail["company"]
 
+    is_idv = detail.get("is_idv", False)
+    value_label = "Ceiling" if is_idv else "TCV"
+    pop_end = f"**PoP End:** {detail['pop_end_date']}"
+    if is_idv and not detail["pop_end_date"]:
+        # IDVs usually have no PoP end, only a last date to order
+        pop_end = ""
+
+    to_date = ""
+    if detail["total_obligated"]:
+        to_date = f"**To Date:** {detail['total_obligated']}"
+
     lines = [
         [company_text, detail["date"], f"[{detail['piid']}]({contract_url})"],
         [
             detail["action"],
-            f"**To Date:** {detail['total_obligated']}",
-            f"**TCV:** {detail['total_value']}",
+            to_date,
+            f"**{value_label}:** {detail['total_value']}",
         ],
         [
             f"**Contract Start:** {detail['pop_start']}",
-            f"**PoP End:** {detail['pop_end_date']}",
+            pop_end,
             f"**Contract End:** {detail['contract_end_date']}",
         ],
         [desc],
