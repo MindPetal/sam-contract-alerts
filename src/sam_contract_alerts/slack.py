@@ -2,7 +2,8 @@
 Build Slack Block Kit messages and post them to a Slack incoming webhook.
 
 Each chat destination gets its own module with the same interface:
-format_results(results) -> payload items, and post(webhook_url, items).
+format_results(results) and format_sam_error(status, message) -> payload
+items, and post(webhook_url, items).
 """
 
 import re
@@ -146,6 +147,13 @@ def format_results(raw_results: list[dict]) -> list[dict]:
             )
 
     return blocks
+
+
+def format_sam_error(status: int | str, message: str | None) -> list[dict]:
+    """
+    Format the SAM.gov error note
+    """
+    return [build_markdown(results.sam_error(status, message))]
 
 
 def split_messages(blocks: list[dict]) -> list[list[dict]]:

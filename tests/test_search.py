@@ -4,7 +4,7 @@ Tests for search.py
 
 import pytest
 
-from sam_contract_alerts import search
+from sam_contract_alerts import sam, search, slack, teams
 from sam_contract_alerts.config import (
     ContractEntry,
     Settings,
@@ -283,3 +283,67 @@ def test_main_teams_failure_still_posts_slack(mocker):
         search.main(settings(slack_webhook_url=SLACK_URL))
 
     mock_slack_post.assert_called_once()
+
+
+SAM_ERROR_TEXT = (
+    "⚠️ There was an error calling the SAM.gov API during the workflow run."
+    " HTTP 504 received: Gateway Timeout."
+)
+
+
+def two_contract_settings() -> Settings:
+    return Settings(
+        sam_api_key="test-api-key",
+        contracts=(
+            ContractEntry("111", "", "One", "AWARD"),
+            ContractEntry("222", "", "Two", "AWARD"),
+        ),
+        naics=tuple(parse_naics_list("Test+Agency:TA:[541512]")),
+        ms_webhook_url="https://webhook.example.com",
+        slack_webhook_url=SLACK_URL,
+    )
+
+
+def test_main_stops_and_posts_only_error_after_retries(mocker):
+    # sam.search raises SamSearchError once its retries are used up
+    error = sam.SamSearchError("failed", 504, "Gateway Timeout")
+    mock_search = mocker.patch(SAM_SEARCH, side_effect=[[award_summary("111")], error])
+    mock_teams_post = mocker.patch("sam_contract_alerts.teams.post")
+    mock_slack_post = mocker.patch("sam_contract_alerts.slack.post")
+
+    with pytest.raises(RuntimeError, match=r"^SAM.gov API returned HTTP 504$"):
+        search.main(two_contract_settings())
+
+    # The NAICS search after the failure is skipped
+    assert mock_search.call_count == 2
+    # Only the error note is posted, not the update found before the failure
+    mock_teams_post.assert_called_once_with(
+        "https://webhook.example.com", teams.format_sam_error(504, "Gateway Timeout")
+    )
+    mock_slack_post.assert_called_once_with(
+        SLACK_URL, slack.format_sam_error(504, "Gateway Timeout")
+    )
+
+
+def test_main_reraises_errors_without_http_response(mocker):
+    # A timeout after retries has no HTTP status to report, so the run fails
+    # without posting, as before
+    error = sam.SamSearchError("failed", "ReadTimeoutError", None)
+    mocker.patch(SAM_SEARCH, side_effect=error)
+    mock_teams_post = mocker.patch("sam_contract_alerts.teams.post")
+    mock_slack_post = mocker.patch("sam_contract_alerts.slack.post")
+
+    with pytest.raises(sam.SamSearchError):
+        search.main(two_contract_settings())
+
+    mock_teams_post.assert_not_called()
+    mock_slack_post.assert_not_called()
+
+
+def test_format_sam_error():
+    assert teams.format_sam_error(504, "Gateway Timeout") == [
+        {"type": "TextBlock", "text": SAM_ERROR_TEXT, "wrap": True}
+    ]
+    assert slack.format_sam_error(504, "Gateway Timeout") == [
+        {"type": "markdown", "text": SAM_ERROR_TEXT}
+    ]

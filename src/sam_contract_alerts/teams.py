@@ -2,7 +2,8 @@
 Build MS Teams Adaptive Card content and post it to a Teams webhook.
 
 Each chat destination gets its own module with the same interface:
-format_results(results) -> payload items, and post(webhook_url, items).
+format_results(results) and format_sam_error(status, message) -> payload
+items, and post(webhook_url, items).
 """
 
 import logging
@@ -78,6 +79,13 @@ def format_results(raw_results: list[dict]) -> list:
             items.append(build_textblock(""))
 
     return items
+
+
+def format_sam_error(status: int | str, message: str | None) -> list:
+    """
+    Format the SAM.gov error note
+    """
+    return [build_textblock(results.sam_error(status, message))]
 
 
 def post(webhook_url: str, items: list[dict]) -> None:

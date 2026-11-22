@@ -6,6 +6,7 @@ import logging
 import random
 import time
 from collections.abc import Callable
+from http import HTTPStatus
 
 import urllib3
 
@@ -25,12 +26,31 @@ REQUEST_TIMEOUT = (10, 90)
 
 class SamSearchError(Exception):
     """
-    A SAM.gov search failed.
+    A SAM.gov search failed. reason is the HTTP reason phrase, or None when
+    there was no HTTP response (e.g. a timeout).
     """
 
-    def __init__(self, message: str, status: int | str):
+    def __init__(self, message: str, status: int | str, reason: str | None = None):
         super().__init__(message)
         self.status = status
+        self.reason = reason
+
+
+def http_reason(error: Exception) -> str | None:
+    """
+    Reason phrase of an HTTP error response. Only the status and reason are
+    kept since the rest of the error can include the request URL and API key.
+    """
+    if not isinstance(error, ApiException) or not error.status:
+        return None
+
+    if error.reason:
+        return error.reason
+
+    try:
+        return HTTPStatus(error.status).phrase
+    except ValueError:
+        return "Unknown error"
 
 
 def describe(criteria: dict) -> str:
@@ -81,7 +101,7 @@ def call_with_retry(request: Callable, criteria: dict):
                 log.error(message)
                 # "from None" keeps the original error, which includes the
                 # request URL, out of the traceback
-                raise SamSearchError(message, status) from None
+                raise SamSearchError(message, status, http_reason(e)) from None
 
             log.warning(
                 "SAM.gov search for %s failed (%s), attempt %d of %d."

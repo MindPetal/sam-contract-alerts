@@ -4,7 +4,7 @@ configured chat channels (MS Teams and/or Slack).
 """
 
 import logging
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta
 
 import client
@@ -158,13 +158,23 @@ def main(settings: Settings) -> None:
     api_client = client.ApiClient(api_config)
 
     log.info("Process search")
-    contract_results = process_search(
-        api_client,
-        settings.sam_api_key,
-        settings.contracts,
-        settings.naics,
-        settings.days,
-    )
+
+    try:
+        contract_results = process_search(
+            api_client,
+            settings.sam_api_key,
+            settings.contracts,
+            settings.naics,
+            settings.days,
+        )
+    except sam.SamSearchError as e:
+        if e.reason is None:
+            # No HTTP response (e.g. a timeout), so nothing to report
+            raise
+
+        # Retries are used up, so stop searching and post only the error
+        post_sam_error(settings, e)
+        return
 
     if contract_results:
         post_results(settings, contract_results)
@@ -173,6 +183,26 @@ def main(settings: Settings) -> None:
 
 
 def post_results(settings: Settings, contract_results: list[dict]) -> None:
+    """
+    Post contract updates to every configured chat channel
+    """
+    post_to_channels(settings, lambda channel: channel.format_results(contract_results))
+
+
+def post_sam_error(settings: Settings, error: sam.SamSearchError) -> None:
+    """
+    Post the SAM.gov error note to every configured chat channel, then fail
+    the run
+    """
+    post_to_channels(
+        settings,
+        lambda channel: channel.format_sam_error(error.status, error.reason),
+    )
+
+    raise RuntimeError(f"SAM.gov API returned HTTP {error.status}")
+
+
+def post_to_channels(settings: Settings, format_items: Callable) -> None:
     """
     Post to every configured chat channel. A failure on one channel doesn't
     stop the others, but the run still fails afterwards.
@@ -191,7 +221,7 @@ def post_results(settings: Settings, contract_results: list[dict]) -> None:
         log.info("Posting results to %s", name)
 
         try:
-            channel.post(webhook_url, channel.format_results(contract_results))
+            channel.post(webhook_url, format_items(channel))
         except Exception:
             log.exception("Posting results to %s failed", name)
             failed.append(name)
