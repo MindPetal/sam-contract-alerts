@@ -170,12 +170,14 @@ class Dates(object):
         "period_of_performance_start_date": "str",
         "current_completion_date": "str",
         "ultimate_completion_date": "str",
+        "last_date_to_order": "str",
     }
     attribute_map = {
         "date_signed": "dateSigned",
         "period_of_performance_start_date": "periodOfPerformanceStartDate",
         "current_completion_date": "currentCompletionDate",
         "ultimate_completion_date": "ultimateCompletionDate",
+        "last_date_to_order": "lastDateToOrder",
     }
 
     def __init__(
@@ -184,11 +186,13 @@ class Dates(object):
         period_of_performance_start_date=None,
         current_completion_date=None,
         ultimate_completion_date=None,
+        last_date_to_order=None,
     ):
         self._date_signed = None
         self._period_of_performance_start_date = None
         self._current_completion_date = None
         self._ultimate_completion_date = None
+        self._last_date_to_order = None
         self.discriminator = None
         if date_signed is not None:
             self.date_signed = date_signed
@@ -198,6 +202,8 @@ class Dates(object):
             self.current_completion_date = current_completion_date
         if ultimate_completion_date is not None:
             self.ultimate_completion_date = ultimate_completion_date
+        if last_date_to_order is not None:
+            self.last_date_to_order = last_date_to_order
 
     @property
     def date_signed(self):
@@ -230,6 +236,14 @@ class Dates(object):
     @ultimate_completion_date.setter
     def ultimate_completion_date(self, ultimate_completion_date):
         self._ultimate_completion_date = ultimate_completion_date
+
+    @property
+    def last_date_to_order(self):
+        return self._last_date_to_order
+
+    @last_date_to_order.setter
+    def last_date_to_order(self, last_date_to_order):
+        self._last_date_to_order = last_date_to_order
 
     def to_dict(self):
         result = {}
@@ -1229,22 +1243,37 @@ class CoreData(object):
     """Core contract data"""
 
     types = {
+        "award_or_idv": "str",
         "award_or_idv_type": "AwardOrIDVType",
         "competition_information": "CompetitionInformation",
     }
     attribute_map = {
+        "award_or_idv": "awardOrIDV",
         "award_or_idv_type": "awardOrIDVType",
         "competition_information": "competitionInformation",
     }
 
-    def __init__(self, award_or_idv_type=None, competition_information=None):
+    def __init__(
+        self, award_or_idv=None, award_or_idv_type=None, competition_information=None
+    ):
+        self._award_or_idv = None
         self._award_or_idv_type = None
         self._competition_information = None
         self.discriminator = None
+        if award_or_idv is not None:
+            self.award_or_idv = award_or_idv
         if award_or_idv_type is not None:
             self.award_or_idv_type = award_or_idv_type
         if competition_information is not None:
             self.competition_information = competition_information
+
+    @property
+    def award_or_idv(self):
+        return self._award_or_idv
+
+    @award_or_idv.setter
+    def award_or_idv(self, award_or_idv):
+        self._award_or_idv = award_or_idv
 
     @property
     def award_or_idv_type(self):
